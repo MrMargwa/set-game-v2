@@ -1,0 +1,37 @@
+# Standaard: alleen database (voor lokale `npm run dev` op poort 4000).
+# Volledige stack: docker compose --profile production up -d
+
+services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: setgame
+      MYSQL_USER: setgame
+      MYSQL_PASSWORD: setgame
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  app:
+    profiles:
+      - production
+    build: .
+    ports:
+      - "4000:4000"
+    environment:
+      DATABASE_URL: mysql://setgame:setgame@db:3306/setgame
+      PORT: "4000"
+      NODE_ENV: production
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  mysql_data:
