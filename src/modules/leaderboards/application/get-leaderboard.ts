@@ -28,7 +28,7 @@ export async function getLeaderboard(
   if (input.modeId && !isGameModeId(input.modeId)) {
     return {
       ok: false,
-      error: { code: "INVALID", message: "Onbekende gamemode." },
+      error: { code: "INVALID", message: "Onbekende modus." },
     };
   }
 
@@ -43,7 +43,7 @@ export async function getLeaderboard(
       ok: false,
       error: {
         code: "UNAVAILABLE",
-        message: "Leaderboard niet beschikbaar (database offline?).",
+        message: "Het leaderboard is tijdelijk niet beschikbaar. Probeer het later opnieuw.",
       },
     };
   }

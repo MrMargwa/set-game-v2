@@ -140,4 +140,4 @@ Commits alleen als je dat expliciet wilt — geen vaste flow hier.
 
 ---
 
-Meer context: [README](./README.md) · [plan van aanpak](./plan-van-aanpak/README.md)
+Meer context: [README](./README.md) · [Spelregels Classic](./SPELREGELS.md) · [plan van aanpak](./plan-van-aanpak/README.md)

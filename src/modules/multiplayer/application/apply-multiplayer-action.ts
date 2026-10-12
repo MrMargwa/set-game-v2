@@ -21,7 +21,7 @@ export function applyMultiplayerAction(
   actingUserId: UserId,
 ): MultiplayerActionResult {
   if (persisted.status === "ended") {
-    return { ok: false, code: "INVALID", message: "Game has ended" };
+    return { ok: false, code: "INVALID", message: "Dit spel is afgelopen." };
   }
 
   const { classic, players } = fromPersistedState(persisted);

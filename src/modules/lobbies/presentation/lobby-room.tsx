@@ -1,10 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import {
   alertDanger,
   btnPrimary,
+  btnSecondary,
   pageLead,
   pageTitle,
   panel,
@@ -25,16 +27,48 @@ type LobbyRoomProps = {
   lobbyId: string;
 };
 
+function PlayerAvatar({ username }: { username: string }) {
+  const initial = username.trim().slice(0, 1).toUpperCase() || "?";
+  return (
+    <span
+      className="grid size-10 shrink-0 place-items-center rounded-full border border-border bg-accent-muted/60 text-sm font-semibold text-accent"
+      aria-hidden
+    >
+      {initial}
+    </span>
+  );
+}
+
+function LobbyRoomSkeleton() {
+  return (
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-8 animate-pulse sm:py-10">
+      <div className="h-8 w-48 rounded-lg bg-surface-elevated" />
+      <div className={`${panel} h-28 rounded-2xl bg-surface-elevated`} />
+      <div className={`${panel} h-40 rounded-2xl bg-surface-elevated`} />
+    </div>
+  );
+}
+
+function statusLabel(status: LobbyPayload["status"]): string {
+  if (status === "open") return "Wachten op spelers";
+  if (status === "in_game") return "Spel bezig";
+  return "Gesloten";
+}
+
 export function LobbyRoom({ lobbyId }: LobbyRoomProps) {
   const router = useRouter();
   const [lobby, setLobby] = useState<LobbyPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const refresh = useCallback(async () => {
     try {
       const res = await fetch(`/api/lobbies/${lobbyId}`);
-      const data = (await res.json()) as { lobby?: LobbyPayload; error?: string };
+      const data = (await res.json()) as {
+        lobby?: LobbyPayload;
+        error?: string;
+      };
       if (!res.ok) {
         setError(data.error ?? "Lobby laden mislukt.");
         return;
@@ -47,7 +81,7 @@ export function LobbyRoom({ lobbyId }: LobbyRoomProps) {
         }
       }
     } catch {
-      setError("Netwerkfout bij lobby vernieuwen.");
+      setError("Geen verbinding. Vernieuwen van de lobby is niet gelukt.");
     }
   }, [lobbyId, router]);
 
@@ -68,53 +102,115 @@ export function LobbyRoom({ lobbyId }: LobbyRoomProps) {
     setStarting(true);
     setError(null);
     try {
-      const res = await fetch(`/api/lobbies/${lobbyId}/start`, { method: "POST" });
+      const res = await fetch(`/api/lobbies/${lobbyId}/start`, {
+        method: "POST",
+      });
       const data = (await res.json()) as {
         game?: { id: string };
         error?: string;
       };
       if (!res.ok) {
-        setError(data.error ?? "Starten mislukt.");
+        setError(
+          data.error ?? "Het spel kon niet worden gestart. Probeer het opnieuw.",
+        );
         return;
       }
       if (data.game?.id) {
         router.push(`/multiplayer/${data.game.id}`);
       }
     } catch {
-      setError("Netwerkfout bij starten.");
+      setError("Geen verbinding. Probeer het opnieuw.");
     } finally {
       setStarting(false);
     }
   }
 
+  async function copyInviteCode() {
+    if (!lobby) return;
+    try {
+      await navigator.clipboard.writeText(lobby.inviteCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+    }
+  }
+
   if (!lobby && !error) {
-    return <p className="p-8 text-center text-sm text-muted">Lobby laden…</p>;
+    return <LobbyRoomSkeleton />;
   }
 
   if (!lobby) {
     return (
-      <p className={`${alertDanger} mx-4 my-8 text-center`} role="alert">
-        {error}
-      </p>
+      <div className="mx-auto max-w-2xl px-4 py-10">
+        <p className={alertDanger} role="alert">
+          {error}
+        </p>
+        <Link href="/lobby" className="mt-4 inline-block text-sm text-accent">
+          Terug naar de lobby
+        </Link>
+      </div>
     );
   }
 
-  const canStart = lobby.isHost && lobby.status === "open" && lobby.players.length >= 2;
+  const canStart =
+    lobby.isHost && lobby.status === "open" && lobby.players.length >= 2;
+  const seatsOpen = lobby.maxPlayers - lobby.players.length;
 
   return (
-    <div className="mx-auto flex w-full max-w-lg flex-col gap-6 px-4 py-10">
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-8 sm:py-10">
       <header>
-        <h1 className={pageTitle}>Lobby</h1>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+          Wachtkamer
+        </p>
+        <h1 className={`${pageTitle} mt-2 text-3xl`}>Lobby</h1>
         <p className={pageLead}>
-          Deel invitecode{" "}
           <span
-            className="rounded-lg border border-border bg-surface-elevated px-3 py-1 font-mono text-lg tracking-widest text-foreground"
+            className={`mr-2 inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+              lobby.status === "open"
+                ? "bg-success-bg text-success"
+                : lobby.status === "in_game"
+                  ? "bg-accent-muted text-accent"
+                  : "bg-surface-elevated text-muted"
+            }`}
+          >
+            {statusLabel(lobby.status)}
+          </span>
+          {seatsOpen > 0
+            ? `Nog ${seatsOpen} plek${seatsOpen === 1 ? "" : "ken"} vrij`
+            : "Lobby is vol"}
+        </p>
+      </header>
+
+      <div
+        className={`${panel} rounded-2xl p-5 shadow-[var(--shadow-card)]`}
+      >
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
+          Invitecode
+        </p>
+        <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+          <span
+            className="max-w-full overflow-x-auto rounded-xl border border-border bg-surface-elevated px-4 py-2 font-mono text-xl font-semibold tracking-[0.14em] text-foreground sm:text-2xl sm:tracking-[0.25em]"
             data-testid="invite-code"
           >
             {lobby.inviteCode}
           </span>
+          <button
+            type="button"
+            onClick={copyInviteCode}
+            className={`${btnSecondary} w-full sm:w-auto`}
+          >
+            {copied ? "Gekopieerd" : "Kopieer"}
+          </button>
+        </div>
+        <p className="mt-3 text-sm text-muted">
+          Deel deze code — vrienden kunnen via{" "}
+          <Link href="/lobby" className="text-accent hover:text-accent-hover">
+            Lobby → Code invoeren
+          </Link>{" "}
+          meedoen.
         </p>
-      </header>
+      </div>
 
       {error && (
         <p className={alertDanger} role="alert">
@@ -123,18 +219,40 @@ export function LobbyRoom({ lobbyId }: LobbyRoomProps) {
       )}
 
       <section>
-        <h2 className="text-sm font-semibold text-foreground">
-          Spelers ({lobby.players.length}/{lobby.maxPlayers})
-        </h2>
-        <ul className={`${panel} mt-2 divide-y divide-border`}>
-          {lobby.players.map((player) => (
-            <li key={player.userId} className="px-4 py-2 text-sm">
-              {player.username}
-              {player.userId === lobby.hostUserId ? (
-                <span className="ml-2 text-xs font-medium text-accent">host</span>
-              ) : null}
-            </li>
-          ))}
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h2 className="font-display text-lg font-semibold">Spelers</h2>
+          <span className="text-sm text-muted">
+            {lobby.players.length}/{lobby.maxPlayers}
+          </span>
+        </div>
+        <ul className={`${panel} divide-y divide-border overflow-hidden rounded-2xl`}>
+          {lobby.players.map((player) => {
+            const isHost = player.userId === lobby.hostUserId;
+            return (
+              <li
+                key={player.userId}
+                className="flex items-center gap-3 px-4 py-3"
+              >
+                <PlayerAvatar username={player.username} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium text-foreground">
+                    {player.username}
+                  </p>
+                  <p className="text-xs text-muted">
+                    Plek {player.seatOrder + 1}
+                    {isHost ? " · Host" : ""}
+                  </p>
+                </div>
+                {isHost ? (
+                  <span
+                    className="shrink-0 rounded-full border border-accent/30 bg-accent-muted/50 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-accent"
+                  >
+                    Host
+                  </span>
+                ) : null}
+              </li>
+            );
+          })}
         </ul>
       </section>
 
@@ -145,21 +263,41 @@ export function LobbyRoom({ lobbyId }: LobbyRoomProps) {
             data-testid="start-multiplayer"
             disabled={!canStart || starting}
             onClick={startGame}
-            className={btnPrimary}
+            className={`${btnPrimary} w-full sm:w-auto`}
           >
-            Start Classic race
+            Spel starten
           </button>
           {lobby.players.length < 2 && (
-            <p className="text-xs text-muted">
-              Wacht op minimaal één andere speler.
+            <p className="text-sm text-muted">
+              Wacht op minimaal één andere speler om te starten.
             </p>
           )}
         </div>
       )}
 
       {!lobby.isHost && lobby.status === "open" && (
-        <p className="text-sm text-muted">Wacht tot de host het spel start…</p>
+        <p
+          className="rounded-xl border border-border bg-surface-elevated/80 px-4 py-3 text-center text-sm text-muted"
+        >
+          Wacht tot de host het spel start…
+        </p>
       )}
+
+      {lobby.status === "closed" && (
+        <p className="text-sm text-muted">
+          Deze lobby is gesloten.{" "}
+          <Link href="/lobby" className="text-accent hover:text-accent-hover">
+            Nieuwe lobby
+          </Link>
+        </p>
+      )}
+
+      <Link
+        href="/lobby"
+        className="text-center text-sm text-muted hover:text-foreground"
+      >
+        Terug naar de lobby
+      </Link>
     </div>
   );
 }

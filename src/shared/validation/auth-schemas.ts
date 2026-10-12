@@ -4,27 +4,27 @@ export const registerSchema = z.object({
   username: z
     .string()
     .trim()
-    .min(3, "Gebruikersnaam moet minimaal 3 tekens zijn")
-    .max(32)
+    .min(3, "Gebruikersnaam moet minimaal 3 tekens zijn.")
+    .max(32, "Gebruikersnaam mag maximaal 32 tekens zijn.")
     .regex(
       /^[a-zA-Z0-9_]+$/,
-      "Alleen letters, cijfers en underscore",
+      "Alleen letters, cijfers en underscore.",
     ),
   password: z
     .string()
-    .min(8, "Wachtwoord moet minimaal 8 tekens zijn")
-    .max(128),
+    .min(8, "Wachtwoord moet minimaal 8 tekens zijn.")
+    .max(128, "Wachtwoord mag maximaal 128 tekens zijn."),
   email: z
     .string()
     .trim()
-    .email("Ongeldig e-mailadres")
+    .email("Ongeldig e-mailadres.")
     .optional()
     .or(z.literal("")),
 });
 
 export const loginSchema = z.object({
-  username: z.string().trim().min(1, "Gebruikersnaam is verplicht"),
-  password: z.string().min(1, "Wachtwoord is verplicht"),
+  username: z.string().trim().min(1, "Gebruikersnaam is verplicht."),
+  password: z.string().min(1, "Wachtwoord is verplicht."),
 });
 
 export type RegisterInput = z.infer<typeof registerSchema>;

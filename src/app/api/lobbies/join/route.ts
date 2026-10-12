@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { SESSION_EXPIRED_MESSAGE } from "@/shared/errors/player-messages";
 import { requireAuthenticatedUser } from "@/modules/accounts/application/get-authenticated-user";
 import { joinLobbyByInvite } from "@/modules/lobbies/application/lobby-service";
 import { joinLobbySchema } from "@/shared/validation/multiplayer-schemas";
@@ -8,7 +9,7 @@ export async function POST(request: Request) {
   try {
     user = await requireAuthenticatedUser();
   } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: SESSION_EXPIRED_MESSAGE }, { status: 401 });
   }
 
   const body: unknown = await request.json().catch(() => null);

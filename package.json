@@ -13,6 +13,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "db:migrate": "node scripts/migrate.mjs",
+    "assets:cards": "node scripts/generate-card-svgs.mjs",
     "docker:db": "docker compose up db -d",
     "docker:prod": "docker compose --profile production up -d"
   },

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { SESSION_EXPIRED_MESSAGE } from "@/shared/errors/player-messages";
 import { requireAuthenticatedUser } from "@/modules/accounts/application/get-authenticated-user";
 import { recordGameSummary } from "@/modules/games/application/record-game-result";
 
@@ -23,14 +24,14 @@ export async function POST(request: Request) {
   try {
     user = await requireAuthenticatedUser();
   } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: SESSION_EXPIRED_MESSAGE }, { status: 401 });
   }
 
   const body: unknown = await request.json().catch(() => null);
   const parsed = recordSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Invalid payload" },
+      { error: "Het resultaat kon niet worden opgeslagen." },
       { status: 400 },
     );
   }
@@ -52,7 +53,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ id });
   } catch {
     return NextResponse.json(
-      { error: "Could not save game result" },
+      { error: "Het resultaat kon niet worden opgeslagen." },
       { status: 503 },
     );
   }

@@ -35,7 +35,7 @@ export async function registerUser(
         ok: false,
         error: {
           code: "CONFLICT",
-          message: "Gebruikersnaam is al in gebruik",
+          message: "Die gebruikersnaam is al in gebruik.",
         },
       };
     }
@@ -55,12 +55,31 @@ export async function registerUser(
     };
   } catch (error) {
     console.error("[registerUser]", error);
-    const message = authUnavailableMessage(error, "Registratie");
+    if (isDuplicateEntry(error)) {
+      const detail = errorDetail(error);
+      if (detail.includes("uk_users_username")) {
+        return {
+          ok: false,
+          error: {
+            code: "CONFLICT",
+            message: "Die gebruikersnaam is al in gebruik.",
+          },
+        };
+      }
+      return {
+        ok: false,
+        error: {
+          code: "CONFLICT",
+          message:
+            "Registratie is niet gelukt. Controleer je gegevens of kies een andere gebruikersnaam.",
+        },
+      };
+    }
     return {
       ok: false,
       error: {
         code: "UNAVAILABLE",
-        message,
+        message: "Registratie is tijdelijk niet mogelijk. Probeer het later opnieuw.",
       },
     };
   }
@@ -94,21 +113,20 @@ export async function loginUser(
       ok: false,
       error: {
         code: "UNAVAILABLE",
-        message: authUnavailableMessage(error, "Inloggen"),
+        message: "Inloggen is tijdelijk niet mogelijk. Probeer het later opnieuw.",
       },
     };
   }
 }
 
-function authUnavailableMessage(error: unknown, action: string): string {
-  const err = error as { code?: string; message?: string };
-  if (err.code === "ECONNREFUSED" || err.message?.includes("ECONNREFUSED")) {
-    return `${action} mislukt: database niet bereikbaar. Start MySQL met \`docker compose up db -d\`, daarna \`npm run db:migrate\`.`;
-  }
-  if (err.message?.includes("Database")) {
-    return err.message;
-  }
-  return `${action} is tijdelijk niet beschikbaar`;
+function isDuplicateEntry(error: unknown): boolean {
+  const err = error as { code?: string; errno?: number };
+  return err.code === "ER_DUP_ENTRY" || err.errno === 1062;
+}
+
+function errorDetail(error: unknown): string {
+  const message = (error as { message?: string }).message;
+  return typeof message === "string" ? message : "";
 }
 
 export async function logoutByToken(rawToken: string | undefined): Promise<void> {
@@ -139,7 +157,7 @@ function invalidCredentials(): AuthResult<LoginResult> {
     ok: false,
     error: {
       code: "INVALID_CREDENTIALS",
-      message: "Ongeldige gebruikersnaam of wachtwoord",
+      message: "Ongeldige gebruikersnaam of wachtwoord.",
     },
   };
 }

@@ -6,6 +6,7 @@ import { createCardCatalog } from "@/core";
 import { findSets } from "@/core/set-rules";
 import { SetCard } from "@/modules/games/presentation/set-card";
 import {
+  alertDanger,
   alertSuccess,
   btnPrimary,
   endedPanel,
@@ -35,19 +36,22 @@ export function MultiplayerGameBoard({
   const catalog = useMemo(() => createCardCatalog(), []);
   const [game, setGame] = useState<GamePayload | null>(null);
   const [selected, setSelected] = useState<CardId[]>([]);
-  const [message, setMessage] = useState<string | null>(null);
+  const [notice, setNotice] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const applyEvents = useCallback((events: GameEvent[]) => {
     for (const event of events) {
       if (event.type === "SET_INVALID") {
-        setMessage("Geen geldige SET.");
+        setNotice({ type: "error", text: "Geen geldige SET." });
       }
       if (event.type === "SET_FOUND") {
-        setMessage("SET gevonden! +1 punt");
+        setNotice({ type: "success", text: "SET gevonden! +1 punt" });
       }
       if (event.type === "GAME_ENDED") {
-        setMessage("Spel afgelopen.");
+        setNotice({ type: "success", text: "Spel afgelopen." });
       }
     }
   }, []);
@@ -65,7 +69,7 @@ export function MultiplayerGameBoard({
         setError(null);
       }
     } catch {
-      setError("Netwerkfout.");
+      setError("Geen verbinding. Probeer het opnieuw.");
     }
   }, [gameId]);
 
@@ -114,12 +118,18 @@ export function MultiplayerGameBoard({
 
       if (res.status === 409) {
         await refresh();
-        setMessage(data.error ?? "Status vernieuwd — probeer opnieuw.");
+        setNotice({
+          type: "error",
+          text: data.error ?? "De status is vernieuwd. Probeer het opnieuw.",
+        });
         return;
       }
 
       if (!res.ok) {
-        setMessage(data.error ?? "Actie mislukt.");
+        setNotice({
+          type: "error",
+          text: data.error ?? "Die actie is niet gelukt.",
+        });
         return;
       }
 
@@ -131,7 +141,10 @@ export function MultiplayerGameBoard({
       }
       setSelected([]);
     } catch {
-      setMessage("Netwerkfout bij actie.");
+      setNotice({
+        type: "error",
+        text: "Geen verbinding. Probeer het opnieuw.",
+      });
     }
   }
 
@@ -171,51 +184,61 @@ export function MultiplayerGameBoard({
   const sortedPlayers = [...game.state.players].sort((a, b) => b.score - a.score);
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-6 sm:py-8">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className={pageTitle}>Multiplayer Classic</h1>
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-3 py-3 sm:gap-6 sm:px-4 sm:py-8">
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className={`${pageTitle} text-2xl sm:text-3xl`}>Multiplayer Classic</h1>
           <p className={pageLead}>
-            Race om SETs — server is authoritative (v{game.version}).
+            Wie het eerst een SET vindt, krijgt het punt.
           </p>
         </div>
-        <div>
+        <div className="rounded-xl border border-border bg-surface px-3 py-2">
           <span className={statLabel}>Deck</span>
-          <p className={statValue} data-testid="deck-count">
+          <p className={`${statValue} text-xl sm:text-2xl`} data-testid="deck-count">
             {game.state.deckCount}
           </p>
         </div>
       </header>
 
-      <div className="flex flex-wrap gap-3">
+      <div className="-mx-3 flex gap-2 overflow-x-auto px-3 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
         {sortedPlayers.map((player) => (
           <div
             key={player.userId}
-            className={`rounded-lg border px-3 py-2 text-sm ${
+            className={`min-w-[8.5rem] shrink-0 rounded-lg border px-3 py-2 text-sm sm:min-w-0 ${
               player.userId === currentUserId
                 ? "border-ring bg-accent-muted/50"
                 : "border-border bg-surface"
             }`}
           >
-            <span className="font-medium">{player.username}</span>
-            <span className="ml-2 font-mono tabular-nums text-muted">
+            <span className="block max-w-40 truncate font-medium">
+              {player.username}
+              {player.userId === currentUserId ? (
+                <span className="ml-1.5 text-[0.65rem] font-semibold uppercase tracking-wide text-accent">
+                  Jij
+                </span>
+              ) : null}
+            </span>
+            <span className="font-mono tabular-nums text-muted">
               {player.score} pt
             </span>
           </div>
         ))}
       </div>
 
-      {message && (
-        <p className={alertSuccess} role="status">
-          {message}
+      {notice && (
+        <p
+          className={notice.type === "error" ? alertDanger : alertSuccess}
+          role={notice.type === "error" ? "alert" : "status"}
+        >
+          {notice.text}
         </p>
       )}
 
       <div
-        className="rounded-2xl border border-border bg-surface-elevated/50 p-4 sm:p-6"
+        className="rounded-2xl border border-border bg-surface-elevated/60 p-2 shadow-[var(--shadow-card)] sm:p-5"
         data-testid="game-board"
       >
-        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
+        <div className="board-grid">
           {game.state.board.map((cardId) => {
             const card = catalog.get(cardId);
             if (!card) return null;
@@ -236,18 +259,18 @@ export function MultiplayerGameBoard({
         data-testid="deal-extra"
         disabled={!hints.canDealExtra || game.state.status !== "playing"}
         onClick={() => postAction({ type: "DEAL_EXTRA" })}
-        className={`${btnPrimary} w-fit`}
+        className={`${btnPrimary} w-full sm:w-fit`}
       >
-        +3 kaarten (geen SET op bord)
+        3 kaarten extra
       </button>
 
       {game.state.status === "ended" && (
         <div className={endedPanel} data-testid="game-ended">
-          <p className="font-display text-lg font-semibold">Race afgelopen</p>
+          <p className="font-display text-lg font-semibold">Resultaat</p>
           <p className="mt-2 text-muted">
-            Winnaar:{" "}
+            Hoogste score:{" "}
             <span className="font-semibold text-foreground">
-              {sortedPlayers[0]?.username ?? "—"} ({sortedPlayers[0]?.score ?? 0} pt)
+              {sortedPlayers[0]?.username ?? "—"} ({sortedPlayers[0]?.score ?? 0} punten)
             </span>
           </p>
         </div>

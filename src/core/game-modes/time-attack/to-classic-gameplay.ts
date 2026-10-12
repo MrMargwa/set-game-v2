@@ -13,6 +13,11 @@ export function toClassicGameplayState(
       initialBoardSize: state.config.initialBoardSize,
       dealExtraSize: state.config.dealExtraSize,
       pointsPerSet: state.config.pointsPerSet,
+      basePoints: state.config.pointsPerSet,
+      comboScoring: false,
+      maxDealExtraUses: null,
+      dealExtraRequiresNoSet: true,
+      maxHintUses: 0,
     },
     catalog: state.catalog,
     deck: state.deck,
@@ -20,6 +25,11 @@ export function toClassicGameplayState(
     score: state.score,
     moves: state.moves,
     validSetsFound: state.validSetsFound,
+    currentStreak: 0,
+    maxStreak: 0,
+    invalidSubmits: 0,
+    dealExtraUses: 0,
+    hintUses: 0,
     rngSeed: state.rngSeed,
   };
 }

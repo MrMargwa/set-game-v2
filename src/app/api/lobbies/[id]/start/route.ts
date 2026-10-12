@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { SESSION_EXPIRED_MESSAGE } from "@/shared/errors/player-messages";
 import { requireAuthenticatedUser } from "@/modules/accounts/application/get-authenticated-user";
 import { startClassicMultiplayerFromLobby } from "@/modules/multiplayer/application/multiplayer-game-service";
 
@@ -9,7 +10,7 @@ export async function POST(_request: Request, context: RouteContext) {
   try {
     user = await requireAuthenticatedUser();
   } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: SESSION_EXPIRED_MESSAGE }, { status: 401 });
   }
 
   const { id } = await context.params;

@@ -43,7 +43,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("[auth/register]", error);
     return NextResponse.json(
-      { error: "Registratie mislukt. Controleer database en serverlogs." },
+      { error: "Registratie is tijdelijk niet mogelijk. Probeer het later opnieuw." },
       { status: 500 },
     );
   }

@@ -4,6 +4,8 @@ export type DomainErrorCode =
   | "CARD_NOT_ON_BOARD"
   | "DECK_EMPTY"
   | "CANNOT_DEAL_EXTRA"
+  | "CANNOT_REVEAL_SET"
+  | "NO_SET_ON_BOARD"
   | "DUPLICATE_CARD";
 
 export type DomainError = {

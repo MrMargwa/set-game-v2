@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { findSets } from "../set-rules";
 import { buildBoardWithoutSets } from "../set-rules/test-helpers";
 import { applyAction } from "./apply-action";
+import { CLASSIC_MAX_HINT_USES } from "./types";
 import { createInitialClassicState } from "./create-initial-state";
 import { evaluateGameEnd } from "./evaluate-game-end";
 
@@ -20,6 +21,8 @@ describe("applyAction — acceptance criteria", () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.state.score).toBe(0);
+    expect(result.state.currentStreak).toBe(0);
+    expect(result.state.invalidSubmits).toBe(1);
     expect(result.events.some((e) => e.type === "SET_INVALID")).toBe(true);
   });
 
@@ -36,7 +39,9 @@ describe("applyAction — acceptance criteria", () => {
 
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.state.score).toBe(1);
+    expect(result.state.score).toBe(1224);
+    expect(result.state.currentStreak).toBe(1);
+    expect(result.state.maxStreak).toBe(1);
     expect(result.state.validSetsFound).toBe(1);
     for (const id of sets[0]!) {
       expect(result.state.board).not.toContain(id);
@@ -57,6 +62,27 @@ describe("applyAction — acceptance criteria", () => {
     if (!result.ok) return;
     expect(result.state.score).toBe(scoreBefore);
     expect(result.state.board.length).toBe(sizeBefore + 3);
+  });
+
+  it("reveals one SET without changing the score, up to the hint limit", () => {
+    const state = createInitialClassicState("hint-limit");
+    const first = applyAction(state, { type: "REVEAL_SET" });
+    expect(first.ok).toBe(true);
+    if (!first.ok) return;
+    expect(first.state.score).toBe(0);
+    expect(first.state.hintUses).toBe(1);
+    expect(first.events[0]?.type).toBe("SET_REVEALED");
+
+    let current = first.state;
+    for (let i = 1; i < CLASSIC_MAX_HINT_USES; i += 1) {
+      const next = applyAction(current, { type: "REVEAL_SET" });
+      expect(next.ok).toBe(true);
+      if (!next.ok) return;
+      current = next.state;
+    }
+
+    const blocked = applyAction(current, { type: "REVEAL_SET" });
+    expect(blocked.ok).toBe(false);
   });
 
   it("AC-SET-05: ends when no SET and cannot deal", () => {

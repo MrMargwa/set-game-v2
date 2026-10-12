@@ -15,6 +15,11 @@ export function createInitialTimeAttackState(
     initialBoardSize: config.initialBoardSize,
     dealExtraSize: config.dealExtraSize,
     pointsPerSet: config.pointsPerSet,
+    basePoints: config.pointsPerSet,
+    comboScoring: false,
+    maxDealExtraUses: null,
+    dealExtraRequiresNoSet: true,
+    maxHintUses: 0,
   });
 
   return {

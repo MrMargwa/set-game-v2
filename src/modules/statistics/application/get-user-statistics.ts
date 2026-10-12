@@ -15,7 +15,7 @@ export async function getUserStatistics(
   } catch {
     return {
       ok: false,
-      message: "Statistieken niet beschikbaar (database offline?).",
+      message: "Statistieken zijn tijdelijk niet beschikbaar. Probeer het later opnieuw.",
     };
   }
 }

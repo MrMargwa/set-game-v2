@@ -35,7 +35,7 @@ function resolveSubmitCards(
   if (unique.size !== 3) {
     return {
       ok: false,
-      error: domainError("DUPLICATE_CARD", "Select three different cards"),
+      error: domainError("DUPLICATE_CARD", "Kies drie verschillende kaarten."),
     };
   }
 
@@ -44,7 +44,7 @@ function resolveSubmitCards(
       ok: false,
       error: domainError(
         "CARD_NOT_ON_BOARD",
-        "All selected cards must be on the board",
+        "Alle gekozen kaarten moeten op het bord liggen.",
       ),
     };
   }
@@ -55,7 +55,7 @@ function resolveSubmitCards(
   if (!a || !b || !c) {
     return {
       ok: false,
-      error: domainError("CARD_NOT_ON_BOARD", "Unknown card on board"),
+      error: domainError("CARD_NOT_ON_BOARD", "Onbekende kaart op het bord."),
     };
   }
 
@@ -84,7 +84,7 @@ function submitSet(
   if (state.status !== "playing") {
     return {
       ok: false,
-      error: domainError("GAME_NOT_PLAYING", "Game is not in progress"),
+      error: domainError("GAME_NOT_PLAYING", "Dit spel loopt niet meer."),
     };
   }
 
@@ -101,7 +101,12 @@ function submitSet(
     events.push({ type: "SET_INVALID", cardIds });
     return {
       ok: true,
-      state: { ...state, moves },
+      state: {
+        ...state,
+        moves,
+        currentStreak: 0,
+        invalidSubmits: state.invalidSubmits + 1,
+      },
       events,
     };
   }
@@ -123,18 +128,27 @@ function submitSet(
     });
   }
 
-  events.push({ type: "SET_FOUND", cardIds });
+  const streakAfter = state.currentStreak + 1;
+  const awarded = pointsForValidSet(state.config, streakAfter);
+  events.push({
+    type: "SET_FOUND",
+    cardIds,
+    pointsEarned: awarded.points,
+    streakAfter,
+    multiplier: awarded.multiplier,
+  });
 
-  const score = state.score + pointsForValidSet(state.config);
   const validSetsFound = state.validSetsFound + 1;
 
   const interim: ClassicGameState = {
     ...state,
     deck,
     board: newBoard,
-    score,
+    score: state.score + awarded.points,
     moves,
     validSetsFound,
+    currentStreak: streakAfter,
+    maxStreak: Math.max(state.maxStreak, streakAfter),
   };
 
   return withEndEvaluation(interim, events);
@@ -144,17 +158,30 @@ function dealExtra(state: ClassicGameState): ApplyResult {
   if (state.status !== "playing") {
     return {
       ok: false,
-      error: domainError("GAME_NOT_PLAYING", "Game is not in progress"),
+      error: domainError("GAME_NOT_PLAYING", "Dit spel loopt niet meer."),
     };
   }
 
   const sets = findSets(state.board, state.catalog);
-  if (sets.length > 0) {
+  if (state.config.dealExtraRequiresNoSet && sets.length > 0) {
     return {
       ok: false,
       error: domainError(
         "CANNOT_DEAL_EXTRA",
-        "Cannot deal extra cards while a SET exists on the board",
+        "Er ligt nog een SET op het bord.",
+      ),
+    };
+  }
+
+  if (
+    state.config.maxDealExtraUses !== null &&
+    state.dealExtraUses >= state.config.maxDealExtraUses
+  ) {
+    return {
+      ok: false,
+      error: domainError(
+        "CANNOT_DEAL_EXTRA",
+        "Je extra kaarten voor deze ronde zijn op.",
       ),
     };
   }
@@ -162,7 +189,7 @@ function dealExtra(state: ClassicGameState): ApplyResult {
   if (state.deck.drawPile.length < state.config.dealExtraSize) {
     return {
       ok: false,
-      error: domainError("DECK_EMPTY", "Not enough cards left in the deck"),
+      error: domainError("DECK_EMPTY", "Er zijn niet genoeg kaarten over in het deck."),
     };
   }
 
@@ -179,9 +206,49 @@ function dealExtra(state: ClassicGameState): ApplyResult {
     ...state,
     deck: drawn.deck,
     board: [...state.board, ...drawn.drawn],
+    dealExtraUses: state.dealExtraUses + 1,
   };
 
   return withEndEvaluation(interim, events);
+}
+
+function revealSet(state: ClassicGameState): ApplyResult {
+  if (state.status !== "playing") {
+    return {
+      ok: false,
+      error: domainError("GAME_NOT_PLAYING", "Dit spel loopt niet meer."),
+    };
+  }
+
+  const maxHints = state.config.maxHintUses;
+  if (maxHints === 0) {
+    return {
+      ok: false,
+      error: domainError("INVALID_ACTION", "Een SET aanwijzen hoort niet bij deze mode."),
+    };
+  }
+
+  if (maxHints !== null && state.hintUses >= maxHints) {
+    return {
+      ok: false,
+      error: domainError("CANNOT_REVEAL_SET", "Je hints voor deze ronde zijn op."),
+    };
+  }
+
+  const sets = findSets(state.board, state.catalog);
+  const revealed = sets[0];
+  if (!revealed) {
+    return {
+      ok: false,
+      error: domainError("NO_SET_ON_BOARD", "Er ligt geen SET op het bord."),
+    };
+  }
+
+  return {
+    ok: true,
+    state: { ...state, hintUses: state.hintUses + 1 },
+    events: [{ type: "SET_REVEALED", cardIds: revealed }],
+  };
 }
 
 export function applyAction(
@@ -198,7 +265,7 @@ export function applyAction(
       if (state.status === "ended") {
         return {
           ok: false,
-          error: domainError("GAME_NOT_PLAYING", "Game already ended"),
+          error: domainError("GAME_NOT_PLAYING", "Dit spel is al afgelopen."),
         };
       }
       return {
@@ -211,10 +278,12 @@ export function applyAction(
       return submitSet(state, action.cardIds);
     case "DEAL_EXTRA":
       return dealExtra(state);
+    case "REVEAL_SET":
+      return revealSet(state);
     case "TICK":
       return {
         ok: false,
-        error: domainError("INVALID_ACTION", "Timer not used in Classic mode"),
+        error: domainError("INVALID_ACTION", "De timer hoort niet bij Classic."),
       };
     default: {
       const _exhaustive: never = action;

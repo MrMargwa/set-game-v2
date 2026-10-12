@@ -41,7 +41,7 @@ describe("applyMultiplayerAction", () => {
     const result = applyMultiplayerAction(state, { type: "DEAL_EXTRA" }, "user-a");
     expect(result.ok).toBe(false);
     if (!result.ok) {
-      expect(result.message).toMatch(/ended/i);
+      expect(result.message).toBe("Dit spel is afgelopen.");
     }
   });
 });

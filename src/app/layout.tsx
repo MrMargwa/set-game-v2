@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Outfit } from "next/font/google";
 import { SiteHeader } from "@/modules/accounts/presentation/site-header";
@@ -21,9 +21,23 @@ const outfit = Outfit({
   subsets: ["latin"],
 });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f6f4f0" },
+    { media: "(prefers-color-scheme: dark)", color: "#121016" },
+  ],
+};
+
 export const metadata: Metadata = {
-  title: "SET Game v2",
-  description: "Classic SET met onderhoudbare game-engine",
+  title: {
+    default: "SET Game v2",
+    template: "%s · SET Game v2",
+  },
+  description:
+    "Speel SET in Classic of Time Attack, alleen of met anderen in een lobby.",
 };
 
 export default function RootLayout({
@@ -34,15 +48,15 @@ export default function RootLayout({
   return (
     <html
       lang="nl"
-      className={`${geistSans.variable} ${geistMono.variable} ${outfit.variable} light h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${outfit.variable} light min-h-full antialiased`}
       suppressHydrationWarning
     >
       <head>
         <ThemeScript />
       </head>
-      <body className="flex min-h-full flex-col">
+      <body className="flex flex-col">
         <SiteHeader />
-        <main className="flex flex-1 flex-col">{children}</main>
+        <main className="flex flex-auto flex-col">{children}</main>
         <SiteFooter />
       </body>
     </html>

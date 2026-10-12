@@ -104,6 +104,14 @@ Vastlegging van **thema, kleuren, typografie, spacing, componenten en motion** v
 
 Niet gebruiken als app-accent of navigatiekleur.
 
+### 3.3b Kaartsymbolen (assets)
+
+- Map: `public/assets/cards/`
+- Bestandsnaam: `{color}-{shape}-{shading}.svg` (één symbool; geen 2×/3×-stapeling in het bestand)
+- `color`: `red` \| `green` \| `purple` · `shape`: `diamond` \| `squiggle` \| `oval` · `shading`: `solid` \| `open` \| `striped`
+- Op de kaart: hetzelfde SVG **1–3×** gestapeld (`CardSymbolStack`)
+- Opnieuw genereren: `npm run assets:cards`
+
 ### 3.4 Leaderboard podium (alleen badges/rij-tint)
 
 | Rang | Achtergrond-tint | Tekst/accent |

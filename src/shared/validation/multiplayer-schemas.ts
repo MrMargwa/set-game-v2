@@ -5,7 +5,7 @@ export const joinLobbySchema = z.object({
     .string()
     .trim()
     .min(4, "Voer een geldige invitecode in.")
-    .max(8),
+    .max(8, "Invitecode mag maximaal 8 tekens zijn."),
 });
 
 export const multiplayerActionSchema = z.object({

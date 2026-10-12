@@ -24,6 +24,11 @@ export function createInitialClassicState(
     score: 0,
     moves: 0,
     validSetsFound: 0,
+    currentStreak: 0,
+    maxStreak: 0,
+    invalidSubmits: 0,
+    dealExtraUses: 0,
+    hintUses: 0,
     rngSeed: seed,
   };
 }

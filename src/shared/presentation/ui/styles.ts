@@ -1,31 +1,34 @@
 /** Gedeelde Tailwind-klassen volgens UI-UX-DESIGN.md */
 
+const focusRing =
+  "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+
 export const linkNav =
-  "text-foreground/75 transition-colors hover:text-foreground";
+  "rounded-sm text-foreground/75 transition-colors hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 export const linkAccent =
   "font-medium text-accent transition-colors hover:text-accent-hover";
 
 export const btnPrimary =
-  "inline-flex min-h-11 items-center justify-center rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50";
+  `inline-flex min-h-11 touch-manipulation items-center justify-center rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50 ${focusRing}`;
 
 export const btnSecondary =
-  "inline-flex min-h-11 items-center justify-center rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-surface-elevated disabled:cursor-not-allowed disabled:opacity-50";
+  `inline-flex min-h-11 touch-manipulation items-center justify-center rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-surface-elevated disabled:cursor-not-allowed disabled:opacity-50 ${focusRing}`;
 
 export const btnCompetition =
-  "inline-flex min-h-11 items-center justify-center rounded-full bg-competition px-8 py-3 text-base font-semibold text-white shadow-[var(--shadow-card)] transition-colors hover:opacity-90";
+  `inline-flex min-h-11 touch-manipulation items-center justify-center rounded-full bg-competition px-8 py-3 text-base font-semibold text-white shadow-[var(--shadow-card)] transition-colors hover:opacity-90 ${focusRing}`;
 
 export const btnPrimaryPill =
-  "inline-flex min-h-11 items-center justify-center rounded-full bg-accent px-8 py-3 text-base font-semibold text-accent-foreground shadow-[var(--shadow-card)] transition-colors hover:bg-accent-hover";
+  `inline-flex min-h-11 touch-manipulation items-center justify-center rounded-full bg-accent px-8 py-3 text-base font-semibold text-accent-foreground shadow-[var(--shadow-card)] transition-colors hover:bg-accent-hover ${focusRing}`;
 
 export const btnSecondaryPill =
-  "inline-flex min-h-11 items-center justify-center rounded-full border border-border bg-surface px-8 py-3 text-base font-semibold text-foreground transition-colors hover:bg-surface-elevated";
+  `inline-flex min-h-11 touch-manipulation items-center justify-center rounded-full border border-border bg-surface px-8 py-3 text-base font-semibold text-foreground transition-colors hover:bg-surface-elevated ${focusRing}`;
 
 export const pillActive =
-  "rounded-full bg-accent px-3 py-1 text-sm font-medium text-accent-foreground";
+  `inline-flex min-h-11 touch-manipulation items-center justify-center whitespace-nowrap rounded-full bg-accent px-4 py-2 text-sm font-medium text-accent-foreground ${focusRing}`;
 
 export const pillInactive =
-  "rounded-full border border-border px-3 py-1 text-sm font-medium text-foreground transition-colors hover:bg-surface-elevated";
+  `inline-flex min-h-11 touch-manipulation items-center justify-center whitespace-nowrap rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-surface-elevated ${focusRing}`;
 
 export const panel =
   "rounded-xl border border-border bg-surface shadow-[var(--shadow-card)]";
@@ -37,7 +40,7 @@ export const alertSuccess =
   "rounded-lg bg-success-bg px-4 py-2 text-sm text-success";
 
 export const inputField =
-  "mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2 text-foreground transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  "mt-1 min-h-11 w-full rounded-lg border border-border bg-surface px-3 py-2 text-base text-foreground transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 export const statLabel = "text-sm text-muted";
 

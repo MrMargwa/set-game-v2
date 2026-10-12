@@ -73,7 +73,7 @@ export async function startClassicMultiplayerFromLobby(
   } catch {
     return {
       ok: false,
-      error: { code: "UNAVAILABLE", message: "Database niet bereikbaar." },
+      error: { code: "UNAVAILABLE", message: "Dit is tijdelijk niet mogelijk. Probeer het later opnieuw." },
     };
   }
 }
@@ -105,7 +105,7 @@ export async function getMultiplayerGameForUser(
   } catch {
     return {
       ok: false,
-      error: { code: "UNAVAILABLE", message: "Database niet bereikbaar." },
+      error: { code: "UNAVAILABLE", message: "Dit is tijdelijk niet mogelijk. Probeer het later opnieuw." },
     };
   }
 }
@@ -126,7 +126,7 @@ export async function applyMultiplayerGameAction(
   if (action.type === "NEW_GAME" || action.type === "QUIT" || action.type === "TICK") {
     return {
       ok: false,
-      error: { code: "INVALID", message: "Actie niet toegestaan in multiplayer." },
+      error: { code: "INVALID", message: "Die actie kan niet tijdens een multiplayerspel." },
     };
   }
 
@@ -160,7 +160,7 @@ export async function applyMultiplayerGameAction(
         ok: false,
         error: {
           code: "CONFLICT",
-          message: "Spelstatus is verouderd. Vernieuwen en opnieuw proberen.",
+          message: "De spelstatus is bijgewerkt. Probeer het opnieuw.",
         },
       };
     }
@@ -216,7 +216,7 @@ export async function applyMultiplayerGameAction(
   } catch {
     return {
       ok: false,
-      error: { code: "UNAVAILABLE", message: "Database niet bereikbaar." },
+      error: { code: "UNAVAILABLE", message: "Dit is tijdelijk niet mogelijk. Probeer het later opnieuw." },
     };
   }
 }

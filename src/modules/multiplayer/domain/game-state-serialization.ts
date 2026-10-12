@@ -1,5 +1,6 @@
 import {
   createInitialClassicState,
+  DEFAULT_CLASSIC_CONFIG,
   type Card,
   type ClassicGameState,
   type Deck,
@@ -56,6 +57,11 @@ export function fromPersistedState(
     score: persisted.players.reduce((max, p) => Math.max(max, p.score), 0),
     moves: persisted.moves,
     validSetsFound: persisted.players.reduce((sum, p) => sum + p.validSetsFound, 0),
+    currentStreak: 0,
+    maxStreak: 0,
+    invalidSubmits: 0,
+    dealExtraUses: 0,
+    hintUses: 0,
     rngSeed: persisted.rngSeed,
   };
 
@@ -90,6 +96,15 @@ export function createInitialPersistedState(
   seed: string,
   players: MultiplayerPlayer[],
 ): PersistedMultiplayerState {
-  const classic = createInitialClassicState(seed);
+  const classic = createInitialClassicState(seed, {
+    ...DEFAULT_CLASSIC_CONFIG,
+    comboScoring: false,
+    basePoints: 1,
+    pointsPerSet: 1,
+    initialBoardSize: 12,
+    maxDealExtraUses: null,
+    dealExtraRequiresNoSet: true,
+    maxHintUses: 0,
+  });
   return toPersistedState(classic, players);
 }

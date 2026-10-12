@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { SESSION_EXPIRED_MESSAGE } from "@/shared/errors/player-messages";
 import { requireAuthenticatedUser } from "@/modules/accounts/application/get-authenticated-user";
 import { applyMultiplayerGameAction } from "@/modules/multiplayer/application/multiplayer-game-service";
 import { multiplayerActionSchema } from "@/shared/validation/multiplayer-schemas";
@@ -10,14 +11,14 @@ export async function POST(request: Request, context: RouteContext) {
   try {
     user = await requireAuthenticatedUser();
   } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: SESSION_EXPIRED_MESSAGE }, { status: 401 });
   }
 
   const body: unknown = await request.json().catch(() => null);
   const parsed = multiplayerActionSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Ongeldige actie" },
+      { error: parsed.error.issues[0]?.message ?? "Die actie is niet geldig." },
       { status: 400 },
     );
   }

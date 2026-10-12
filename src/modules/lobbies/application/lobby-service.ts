@@ -55,7 +55,7 @@ export async function createLobby(
       ok: false,
       error: {
         code: "UNAVAILABLE",
-        message: "Database niet bereikbaar. Start MySQL en voer migraties uit.",
+        message: "Dit is tijdelijk niet mogelijk. Probeer het later opnieuw.",
       },
     };
   }
@@ -103,7 +103,7 @@ export async function joinLobbyByInvite(
       ok: false,
       error: {
         code: "UNAVAILABLE",
-        message: "Database niet bereikbaar.",
+        message: "Dit is tijdelijk niet mogelijk. Probeer het later opnieuw.",
       },
     };
   }
@@ -135,7 +135,7 @@ export async function getLobbyForUser(
   } catch {
     return {
       ok: false,
-      error: { code: "UNAVAILABLE", message: "Database niet bereikbaar." },
+      error: { code: "UNAVAILABLE", message: "Dit is tijdelijk niet mogelijk. Probeer het later opnieuw." },
     };
   }
 }

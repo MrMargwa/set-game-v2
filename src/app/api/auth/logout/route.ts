@@ -16,6 +16,9 @@ export async function POST() {
     return response;
   } catch (error) {
     console.error("[auth/logout]", error);
-    return NextResponse.json({ error: "Uitloggen mislukt" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Uitloggen is niet gelukt. Probeer het opnieuw." },
+      { status: 500 },
+    );
   }
 }

@@ -50,21 +50,21 @@ export function AuthForm({ mode }: AuthFormProps) {
       } catch {
         setError(
           response.ok
-            ? "Onverwacht serverantwoord"
-            : `Serverfout (${response.status})`,
+            ? "Geen bruikbaar antwoord van de server. Probeer het opnieuw."
+            : "De server antwoordde met een fout. Probeer het opnieuw.",
         );
         return;
       }
 
       if (!response.ok) {
-        setError(data.error ?? "Er ging iets mis");
+        setError(data.error ?? "Er ging iets mis. Probeer het opnieuw.");
         return;
       }
 
       router.push("/dashboard");
       router.refresh();
     } catch {
-      setError("Netwerkfout — probeer opnieuw");
+      setError("Geen verbinding. Probeer het opnieuw.");
     } finally {
       setLoading(false);
     }
@@ -73,7 +73,7 @@ export function AuthForm({ mode }: AuthFormProps) {
   return (
     <form
       onSubmit={handleSubmit}
-      className={`${panel} mx-auto flex w-full max-w-sm flex-col gap-4 p-6`}
+      className={`${panel} mx-auto flex w-full max-w-sm flex-col gap-4 p-5 sm:p-6`}
     >
       <h1 className="font-display text-xl font-semibold">
         {mode === "login" ? "Inloggen" : "Account aanmaken"}
@@ -94,6 +94,11 @@ export function AuthForm({ mode }: AuthFormProps) {
           autoComplete="username"
           required
         />
+        {mode === "register" ? (
+          <span className="text-xs text-muted">
+            Minstens 3 tekens: letters, cijfers en underscore.
+          </span>
+        ) : null}
       </label>
 
       {mode === "register" && (
@@ -119,10 +124,13 @@ export function AuthForm({ mode }: AuthFormProps) {
           autoComplete={mode === "login" ? "current-password" : "new-password"}
           required
         />
+        {mode === "register" ? (
+          <span className="text-xs text-muted">Minstens 8 tekens.</span>
+        ) : null}
       </label>
 
-      <button type="submit" disabled={loading} className={btnPrimary}>
-        {loading ? "Even geduld…" : mode === "login" ? "Inloggen" : "Registreren"}
+      <button type="submit" disabled={loading} className={`${btnPrimary} w-full`}>
+        {loading ? "Bezig…" : mode === "login" ? "Inloggen" : "Registreren"}
       </button>
 
       <p className="text-center text-sm text-muted">

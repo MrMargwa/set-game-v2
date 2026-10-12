@@ -1,22 +1,63 @@
 "use client";
 
 import type { Card } from "@/core";
+import type { Color, NumberCount, Shading, Shape } from "@/core";
+import { CardSymbolStack } from "./card-symbol-stack";
 
-const COLOR_MAP = {
-  red: "#d64045",
-  green: "#2a9d6f",
-  purple: "#7b5ea7",
-} as const;
+const NUMBER_LABEL: Record<NumberCount, string> = {
+  1: "één",
+  2: "twee",
+  3: "drie",
+};
+
+const COLOR_LABEL: Record<Color, string> = {
+  red: "rode",
+  green: "groene",
+  purple: "paarse",
+};
+
+const SHADING_LABEL: Record<Shading, string> = {
+  open: "open",
+  striped: "gestreept",
+  solid: "gevuld",
+};
+
+function shapeLabel(shape: Shape, count: NumberCount): string {
+  if (count === 1) {
+    if (shape === "diamond") return "ruit";
+    if (shape === "oval") return "ovaal";
+    return "golf";
+  }
+  if (shape === "diamond") return "ruiten";
+  if (shape === "oval") return "ovalen";
+  return "golven";
+}
+
+function cardAccessibleName(card: Card): string {
+  const { number, color, shape, shading } = card.attributes;
+  return `${NUMBER_LABEL[number]} ${COLOR_LABEL[color]} ${shapeLabel(shape, number)}, ${SHADING_LABEL[shading]}`;
+}
 
 type SetCardProps = {
   card: Card;
   selected?: boolean;
+  feedback?: "success" | "error";
+  hinted?: boolean;
+  celebrateSuccess?: boolean;
+  exiting?: boolean;
   onSelect?: () => void;
 };
 
-export function SetCard({ card, selected, onSelect }: SetCardProps) {
-  const fill = COLOR_MAP[card.attributes.color];
-  const { number, shape, shading } = card.attributes;
+export function SetCard({
+  card,
+  selected,
+  feedback,
+  hinted,
+  celebrateSuccess,
+  exiting,
+  onSelect,
+}: SetCardProps) {
+  const { number, shape, shading, color } = card.attributes;
 
   return (
     <button
@@ -24,99 +65,49 @@ export function SetCard({ card, selected, onSelect }: SetCardProps) {
       data-testid={`card-${card.id}`}
       onClick={onSelect}
       aria-pressed={selected}
-      className={`relative flex aspect-[5/7] w-full max-w-[120px] flex-col rounded-xl border-2 bg-card-face p-2 shadow-[var(--shadow-card)] transition-[transform,box-shadow,border-color] duration-[var(--motion-fast)] ease-out hover:-translate-y-0.5 hover:shadow-[var(--shadow-card-hover)] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none motion-reduce:hover:translate-y-0 ${
-        selected
-          ? "scale-[1.02] border-ring ring-2 ring-ring/40"
+      aria-label={`${cardAccessibleName(card)}${hinted ? ", hint" : ""}`}
+      className={`animate-card-enter relative flex aspect-[5/7] w-full min-w-0 touch-manipulation flex-col rounded-xl border-2 bg-card-face p-1.5 shadow-[var(--shadow-card)] transition-[transform,box-shadow,border-color,background-color,opacity] duration-[var(--motion-normal)] ease-out hover:-translate-y-1 hover:shadow-[var(--shadow-card-hover)] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:p-2 ${
+        selected && !celebrateSuccess && !exiting
+          ? "border-ring bg-accent-muted/20 ring-2 ring-ring/40"
           : "border-border"
+      } ${
+        hinted && !celebrateSuccess && !exiting
+          ? "z-[1] scale-[1.02] border-competition bg-competition/5 animate-hint-pulse"
+          : ""
+      } ${
+        feedback === "error"
+          ? "animate-set-shake border-danger bg-danger-bg/60"
+          : ""
+      } ${
+        celebrateSuccess
+          ? "z-[2] scale-[1.04] border-success bg-success-bg/60 ring-2 ring-success/45 animate-set-success-glow"
+          : ""
+      } ${
+        exiting ? "animate-set-card-exit z-[2] border-success/80 bg-success-bg/40" : ""
       }`}
     >
-      <svg viewBox="0 0 100 120" className="h-full w-full" aria-hidden>
-        <defs>
-          <pattern
-            id={`stripe-${card.id}`}
-            width="6"
-            height="6"
-            patternUnits="userSpaceOnUse"
-            patternTransform="rotate(45)"
-          >
-            <rect width="6" height="6" fill="var(--card-face)" />
-            <line x1="0" y1="0" x2="0" y2="6" stroke={fill} strokeWidth="2" />
-          </pattern>
-        </defs>
-        {Array.from({ length: number }, (_, i) => {
-          const y = number === 1 ? 60 : 25 + i * (70 / (number - 1));
-          return (
-            <ShapeGlyph
-              key={i}
-              shape={shape}
-              shading={shading}
-              color={fill}
-              patternId={`stripe-${card.id}`}
-              cx={50}
-              cy={y}
-            />
-          );
-        })}
-      </svg>
+      <CardSymbolStack
+        number={number}
+        color={color}
+        shape={shape}
+        shading={shading}
+      />
+      {selected && !celebrateSuccess && !exiting ? (
+        <span
+          aria-hidden
+          className="absolute top-1 right-1 grid size-5 place-items-center rounded-full bg-accent text-[0.7rem] font-bold leading-none text-accent-foreground shadow-sm"
+        >
+          ✓
+        </span>
+      ) : null}
+      {hinted && !celebrateSuccess && !exiting ? (
+        <span
+          aria-hidden
+          className="absolute top-1 left-1 rounded bg-competition px-1 py-0.5 text-[0.6rem] font-bold uppercase leading-none text-[#1c1917]"
+        >
+          Hint
+        </span>
+      ) : null}
     </button>
-  );
-}
-
-function ShapeGlyph({
-  shape,
-  shading,
-  color,
-  patternId,
-  cx,
-  cy,
-}: {
-  shape: Card["attributes"]["shape"];
-  shading: Card["attributes"]["shading"];
-  color: string;
-  patternId: string;
-  cx: number;
-  cy: number;
-}) {
-  const stroke = color;
-  const fill =
-    shading === "solid"
-      ? color
-      : shading === "open"
-        ? "transparent"
-        : `url(#${patternId})`;
-
-  if (shape === "diamond") {
-    return (
-      <polygon
-        points={`${cx},${cy - 18} ${cx + 22},${cy} ${cx},${cy + 18} ${cx - 22},${cy}`}
-        fill={fill}
-        stroke={stroke}
-        strokeWidth={3}
-      />
-    );
-  }
-
-  if (shape === "oval") {
-    return (
-      <ellipse
-        cx={cx}
-        cy={cy}
-        rx={26}
-        ry={14}
-        fill={fill}
-        stroke={stroke}
-        strokeWidth={3}
-      />
-    );
-  }
-
-  return (
-    <path
-      d={`M ${cx - 24} ${cy} Q ${cx - 12} ${cy - 22}, ${cx} ${cy} T ${cx + 24} ${cy} T ${cx} ${cy + 22} T ${cx - 24} ${cy}`}
-      fill={fill}
-      stroke={stroke}
-      strokeWidth={3}
-      strokeLinejoin="round"
-    />
   );
 }
