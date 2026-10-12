@@ -31,9 +31,10 @@ npm run dev
 
 | Commando | Wat het doet |
 |----------|----------------|
-| `npm run dev` | Next.js op poort **4000** |
+| `npm run dev` | Development op **localhost:4000** |
 | `npm run build` | Production build |
-| `npm run start` | Production server op **4000** |
+| `npm run start` | Production (`PORT` uit env, bv. Railway) |
+| `npm run start:local` | Production lokaal op **4000** (na `build`) |
 | `npm run docker:db` | Alleen MySQL in Docker |
 | `npm run docker:prod` | App + DB in Docker (stop `npm run dev` eerst) |
 | `npm run db:migrate` | SQL migraties (leest `.env`) |
@@ -119,6 +120,14 @@ Vaste seed (tests/debug): `/play?seed=e2e-happy`
 | `DATABASE_URL is not set` bij migrate | `.env` aanmaken/aanvullen, opnieuw migreren |
 | Poort **4000** bezet | Stop andere `npm run dev` of Docker app (`docker compose --profile production down`) |
 | `docker compose up -d` faalt op 4000 | Gebruik `npm run docker:db` + lokaal `npm run dev` |
+
+## Railway (productie)
+
+- **Lokaal:** blijf `npm run dev` → poort **4000** (`.env` met Docker MySQL).
+- **Railway web service:** geen custom start met `$PORT` nodig — `npm start` leest `PORT` van Railway.
+- **Variables:** `DATABASE_URL` (MySQL reference), `SESSION_SECRET`, `NODE_ENV=production`.
+- **Migraties:** **Pre-deploy command** → `npm run db:migrate` (of één keer in Railway shell na deploy). Vereist recente Dockerfile met `database/` + `scripts/migrate.mjs` in de image.
+- **Start:** leeg laten of `npm start` (geen `-p 4000`).
 
 ## Git (kort)
 
