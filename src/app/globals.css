@@ -148,14 +148,41 @@ body {
   }
 }
 
+/* Bord vult op een smal scherm de resterende hoogte, zonder te scrollen. */
 .play-board-grid {
-  grid-template-columns: repeat(var(--board-cols, 3), minmax(0, 1fr));
-  gap: 0.5rem;
+  --play-cols: var(--board-cols, 3);
+  --play-rows: var(--board-rows-compact, var(--board-rows));
+  grid-template-columns: repeat(var(--play-cols), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--play-rows), minmax(0, 1fr));
+  align-content: stretch;
+  gap: 0.35rem;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.play-board-grid > * {
+  container-type: size;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 0;
+}
+
+.play-board-grid > * > .board-card {
+  width: min(100cqw, calc(100cqh * 5 / 7));
+  max-width: 100%;
+  max-height: 100%;
+  height: auto;
+  aspect-ratio: 5 / 7;
 }
 
 @media (min-width: 1024px) {
   .play-board-grid {
-    grid-template-columns: repeat(var(--board-cols, 5), minmax(0, 1fr));
+    --play-cols: var(--board-cols, 5);
+    --play-rows: var(--board-rows);
+    grid-template-rows: none;
+    align-content: start;
     gap: 0.5rem;
     width: min(
       100%,
@@ -166,6 +193,16 @@ body {
     );
     height: max-content;
     max-height: 100%;
+  }
+
+  .play-board-grid > * {
+    display: block;
+    container-type: normal;
+  }
+
+  .play-board-grid > * > .board-card {
+    width: 100%;
+    max-height: none;
   }
 }
 

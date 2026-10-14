@@ -58,6 +58,7 @@ export function GameBoard({ modeId, initialSeed }: GameBoardProps) {
   const scoreRefresh =
     state.status === "ended" ? `ended-${state.score}` : "playing";
   const boardRows = Math.max(3, Math.ceil(boardCardIds.length / 5));
+  const compactRows = Math.max(1, Math.ceil(boardCardIds.length / 3));
 
   const rightPanel =
     state.modeId === "classic" ? (
@@ -143,6 +144,7 @@ export function GameBoard({ modeId, initialSeed }: GameBoardProps) {
         <PlayBoardFrame celebrate={clearingSet?.stage === "celebrate"}>
           <PlayBoardGrid
             boardRows={boardRows}
+            compactRows={compactRows}
             inactive={waitingToStart || isBoardAnimating}
             dimmed={waitingToStart}
           >
@@ -225,9 +227,6 @@ export function GameBoard({ modeId, initialSeed }: GameBoardProps) {
             </div>
           ) : null}
         </PlayBoardFrame>
-        <div className="mt-2 shrink-0 lg:hidden [&_aside]:h-auto [&_aside]:max-h-36">
-          {rightPanel}
-        </div>
       </PlayShellCenter>
 
       <PlayShellActions>

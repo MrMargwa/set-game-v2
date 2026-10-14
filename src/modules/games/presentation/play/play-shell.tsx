@@ -37,7 +37,7 @@ export function PlayShellLeft({ children }: { children: ReactNode }) {
 
 export function PlayShellCenter({ children }: { children: ReactNode }) {
   return (
-    <div className="play-board flex min-h-0 min-w-0 flex-col overflow-y-auto lg:overflow-hidden">
+    <div className="play-board flex min-h-0 min-w-0 flex-col overflow-hidden">
       {children}
     </div>
   );
@@ -79,7 +79,7 @@ export function PlayBoardFrame({
 }) {
   return (
     <div
-      className={`play-board-frame relative flex shrink-0 flex-col rounded-xl border border-border bg-surface-elevated/60 px-2 py-2 shadow-[var(--shadow-card)] sm:rounded-2xl sm:px-3 lg:min-h-0 lg:flex-1 lg:shrink lg:overflow-hidden lg:[container-type:size] ${
+      className={`play-board-frame relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-surface-elevated/60 px-1.5 py-1.5 shadow-[var(--shadow-card)] [container-type:size] sm:rounded-2xl sm:px-3 sm:py-2 ${
         celebrate ? "animate-board-success" : ""
       }`}
       data-testid={testId}
@@ -91,6 +91,8 @@ export function PlayBoardFrame({
 
 type PlayBoardGridProps = {
   boardRows: number;
+  /** Rijen als de kaarten in 3 kolommen het scherm moeten vullen. */
+  compactRows?: number;
   columns?: number;
   inactive?: boolean;
   dimmed?: boolean;
@@ -99,6 +101,7 @@ type PlayBoardGridProps = {
 
 export function PlayBoardGrid({
   boardRows,
+  compactRows,
   columns,
   inactive,
   dimmed,
@@ -106,11 +109,12 @@ export function PlayBoardGrid({
 }: PlayBoardGridProps) {
   return (
     <div
-      className={`play-board-grid mx-auto grid w-full content-start ${
+      className={`play-board-grid mx-auto grid h-full min-h-0 w-full flex-1 ${
         inactive ? "pointer-events-none select-none" : ""
       } ${dimmed ? "opacity-60 blur-sm" : ""}`}
       style={{
         ["--board-rows" as string]: boardRows,
+        ["--board-rows-compact" as string]: compactRows ?? boardRows,
         ...(columns ? { ["--board-cols" as string]: columns } : {}),
       }}
     >
