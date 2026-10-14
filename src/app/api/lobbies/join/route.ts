@@ -21,7 +21,11 @@ export async function POST(request: Request) {
     );
   }
 
-  const result = await joinLobbyByInvite(user, parsed.data.inviteCode);
+  const result = await joinLobbyByInvite(
+    user,
+    parsed.data.inviteCode,
+    parsed.data.password,
+  );
   if (!result.ok) {
     const status =
       result.error.code === "NOT_FOUND"
@@ -29,7 +33,10 @@ export async function POST(request: Request) {
         : result.error.code === "UNAVAILABLE"
           ? 503
           : 400;
-    return NextResponse.json({ error: result.error.message }, { status });
+    return NextResponse.json(
+      { error: result.error.message, code: result.error.code },
+      { status },
+    );
   }
 
   return NextResponse.json({ lobby: result.lobby });

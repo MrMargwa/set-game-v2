@@ -11,6 +11,8 @@ import {
   pageTitle,
   panel,
 } from "@/shared/presentation/ui/styles";
+import type { LobbyMatchSettings } from "../domain/lobby-settings";
+import { LobbySettingsPanel } from "./lobby-settings-panel";
 
 type LobbyPayload = {
   id: string;
@@ -21,6 +23,7 @@ type LobbyPayload = {
   multiplayerGameId: string | null;
   players: { userId: string; username: string; seatOrder: number }[];
   isHost: boolean;
+  settings: LobbyMatchSettings;
 };
 
 type LobbyRoomProps = {
@@ -255,6 +258,15 @@ export function LobbyRoom({ lobbyId }: LobbyRoomProps) {
           })}
         </ul>
       </section>
+
+      <LobbySettingsPanel
+        lobbyId={lobby.id}
+        settings={lobby.settings}
+        isHost={lobby.isHost}
+        locked={lobby.status !== "open"}
+        onSaved={() => void refresh()}
+        onError={(message) => setError(message || null)}
+      />
 
       {lobby.isHost && lobby.status === "open" && (
         <div className="flex flex-col gap-2">

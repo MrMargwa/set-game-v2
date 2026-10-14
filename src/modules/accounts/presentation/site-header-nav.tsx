@@ -13,6 +13,7 @@ type SiteHeaderNavProps = {
 
 const links = [
   { href: "/play", label: "Spelen" },
+  { href: "/rules", label: "Spelregels" },
   { href: "/leaderboards", label: "Leaderboard" },
 ] as const;
 

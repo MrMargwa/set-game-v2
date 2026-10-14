@@ -1,4 +1,4 @@
-import type { ClassicGameState } from "../../game-engine";
+import { CLASSIC_MAX_DEAL_EXTRA_USES, type ClassicGameState } from "../../game-engine";
 import type { TimeAttackGameState } from "./types";
 
 export function toClassicGameplayState(
@@ -15,9 +15,11 @@ export function toClassicGameplayState(
       pointsPerSet: state.config.pointsPerSet,
       basePoints: state.config.pointsPerSet,
       comboScoring: false,
-      maxDealExtraUses: null,
-      dealExtraRequiresNoSet: true,
-      maxHintUses: 0,
+      maxDealExtraUses: CLASSIC_MAX_DEAL_EXTRA_USES,
+      dealExtraRequiresNoSet: false,
+      maxHintUses: null,
+      hintCost: 0,
+      dealExtraCost: 0,
     },
     catalog: state.catalog,
     deck: state.deck,
@@ -28,7 +30,7 @@ export function toClassicGameplayState(
     currentStreak: 0,
     maxStreak: 0,
     invalidSubmits: 0,
-    dealExtraUses: 0,
+    dealExtraUses: state.dealExtraUses,
     hintUses: 0,
     rngSeed: state.rngSeed,
   };
@@ -47,5 +49,6 @@ export function mergeFromClassicGameplay(
     score: classic.score,
     moves: classic.moves,
     validSetsFound: classic.validSetsFound,
+    dealExtraUses: classic.dealExtraUses,
   };
 }

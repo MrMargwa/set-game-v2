@@ -5,7 +5,12 @@ import {
   type ClassicGameState,
   type Deck,
 } from "@/core";
-import type { MultiplayerClassicSnapshot, MultiplayerPlayer } from "./types";
+import {
+  DEFAULT_MULTIPLAYER_RULES,
+  type MultiplayerClassicSnapshot,
+  type MultiplayerPlayer,
+  type MultiplayerRules,
+} from "./types";
 
 export type PersistedMultiplayerState = {
   modeId: "classic";
@@ -19,12 +24,14 @@ export type PersistedMultiplayerState = {
   catalogEntries: Card[];
   players: MultiplayerPlayer[];
   lastSetByUserId?: string;
+  rules?: MultiplayerRules;
 };
 
 export function toPersistedState(
   classic: ClassicGameState,
   players: MultiplayerPlayer[],
   lastSetByUserId?: string,
+  rules?: MultiplayerRules,
 ): PersistedMultiplayerState {
   return {
     modeId: "classic",
@@ -38,7 +45,30 @@ export function toPersistedState(
     catalogEntries: [...classic.catalog.values()],
     players,
     lastSetByUserId,
+    rules,
   };
+}
+
+export function resolveRules(state: PersistedMultiplayerState): MultiplayerRules {
+  return {
+    ...DEFAULT_MULTIPLAYER_RULES,
+    ...state.rules,
+    startedAt: state.rules?.startedAt || DEFAULT_MULTIPLAYER_RULES.startedAt,
+  };
+}
+
+export function expireIfTimedOut(
+  state: PersistedMultiplayerState,
+  nowMs = Date.now(),
+): PersistedMultiplayerState {
+  const rules = resolveRules(state);
+  if (state.status === "ended" || !rules.timeLimitSeconds || !rules.startedAt) {
+    return state;
+  }
+  const started = Date.parse(rules.startedAt);
+  if (!Number.isFinite(started)) return state;
+  if (nowMs < started + rules.timeLimitSeconds * 1000) return state;
+  return { ...state, status: "ended", endReason: "time_up" };
 }
 
 export function fromPersistedState(
@@ -50,7 +80,11 @@ export function fromPersistedState(
     modeId: "classic",
     status: persisted.status,
     endReason: persisted.endReason,
-    config: persisted.config,
+    config: {
+      ...persisted.config,
+      hintCost: persisted.config.hintCost ?? 0,
+      dealExtraCost: persisted.config.dealExtraCost ?? 0,
+    },
     catalog,
     deck: persisted.deck,
     board: persisted.board,
@@ -65,7 +99,14 @@ export function fromPersistedState(
     rngSeed: persisted.rngSeed,
   };
 
-  return { classic, players: persisted.players };
+  return {
+    classic,
+    players: persisted.players.map((player) => ({
+      ...player,
+      currentStreak: player.currentStreak ?? 0,
+      maxStreak: player.maxStreak ?? 0,
+    })),
+  };
 }
 
 export function toClientSnapshot(
@@ -81,6 +122,7 @@ export function toClientSnapshot(
     moves: persisted.moves,
     players: persisted.players,
     lastSetByUserId: persisted.lastSetByUserId,
+    rules: resolveRules(persisted),
   };
 }
 
@@ -95,16 +137,47 @@ export function parsePersistedState(json: unknown): PersistedMultiplayerState {
 export function createInitialPersistedState(
   seed: string,
   players: MultiplayerPlayer[],
+  rules: Partial<MultiplayerRules> = {},
 ): PersistedMultiplayerState {
+  const resolved: MultiplayerRules = {
+    ...DEFAULT_MULTIPLAYER_RULES,
+    ...rules,
+    startedAt: rules.startedAt || new Date().toISOString(),
+  };
+  const boardSize = resolved.initialBoardSize || DEFAULT_MULTIPLAYER_RULES.initialBoardSize;
+  const deckSize = Math.max(boardSize, resolved.deckSize || DEFAULT_MULTIPLAYER_RULES.deckSize);
+  const dealExtraSize = resolved.dealExtraSize ?? DEFAULT_MULTIPLAYER_RULES.dealExtraSize;
   const classic = createInitialClassicState(seed, {
     ...DEFAULT_CLASSIC_CONFIG,
     comboScoring: false,
     basePoints: 1,
     pointsPerSet: 1,
-    initialBoardSize: 12,
+    initialBoardSize: boardSize,
+    dealExtraSize: Math.max(1, dealExtraSize),
     maxDealExtraUses: null,
     dealExtraRequiresNoSet: true,
     maxHintUses: 0,
+    hintCost: 0,
+    dealExtraCost: 0,
   });
-  return toPersistedState(classic, players);
+  const keptDraw = Math.max(0, deckSize - classic.board.length);
+  return toPersistedState(
+    {
+      ...classic,
+      deck: {
+        ...classic.deck,
+        drawPile: classic.deck.drawPile.slice(0, keptDraw),
+      },
+    },
+    players,
+    undefined,
+    {
+      ...resolved,
+      dealExtraSize,
+      deckSize,
+      allowDealExtra: dealExtraSize > 0,
+      initialBoardSize: boardSize,
+      boardColumns: resolved.boardColumns || DEFAULT_MULTIPLAYER_RULES.boardColumns,
+    },
+  );
 }

@@ -13,7 +13,7 @@ test.describe("Classic SET play", () => {
 
     await expect(page.getByTestId(`card-${E2E_SET[0]}`)).toBeVisible();
     await expect(page.getByTestId("game-board").locator("[data-testid^='card-']")).toHaveCount(
-      18,
+      12,
     );
     await page.getByTestId("begin-round").click();
     await expect(page.getByTestId("score")).toHaveText("0");
@@ -22,7 +22,7 @@ test.describe("Classic SET play", () => {
       await page.getByTestId(`card-${cardId}`).click();
     }
 
-    await expect(page.getByTestId("score")).toHaveText("1224");
+    await expect(page.getByTestId("score")).toHaveText("741");
     await expect(page.getByTestId("game-message")).toContainText("SET gevonden");
   });
 

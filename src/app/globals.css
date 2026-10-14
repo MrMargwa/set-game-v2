@@ -108,36 +108,111 @@ body {
   padding-right: env(safe-area-inset-right);
 }
 
-/* Speelbord: 3 kolommen op een telefoon, meer zodra kaarten leesbaar blijven. */
-.board-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.5rem;
+/* Speelscherm: boven stats, midden kaarten, onder knoppen. */
+.play-shell-grid {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "chrome"
+    "board"
+    "actions";
 }
 
-.board-grid > * {
-  min-width: 0;
-  width: 100%;
+.play-chrome {
+  grid-area: chrome;
 }
 
-@media (min-width: 520px) {
-  .board-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0.75rem;
-  }
+.play-board {
+  grid-area: board;
+}
+
+.play-actions {
+  grid-area: actions;
+}
+
+.play-ranks {
+  grid-area: ranks;
 }
 
 @media (min-width: 1024px) {
-  .board-grid {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 1rem;
+  .play-shell-grid {
+    grid-template-columns: 12.75rem minmax(0, 1fr) 12.75rem;
+    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "chrome board ranks"
+      "actions board ranks";
+  }
+
+  .play-ranks {
+    grid-row: 1 / span 2;
   }
 }
 
-@media (max-height: 520px) and (min-width: 520px) {
-  .board-grid {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+.play-board-grid {
+  grid-template-columns: repeat(var(--board-cols, 3), minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+@media (min-width: 1024px) {
+  .play-board-grid {
+    grid-template-columns: repeat(var(--board-cols, 5), minmax(0, 1fr));
     gap: 0.5rem;
+    width: min(
+      100%,
+      calc(
+        (100cqh - (var(--board-rows) - 1) * 6px) / var(--board-rows) * 5 / 7 * var(--board-cols, 5) +
+          (var(--board-rows) - 1) * 6px + 24px
+      )
+    );
+    height: max-content;
+    max-height: 100%;
+  }
+}
+
+.board-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.board-fit {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-content: start;
+  gap: 0.5rem;
+  height: auto;
+  max-height: 100%;
+  min-height: 0;
+}
+
+.board-fit > .board-cell {
+  container-type: size;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 0;
+}
+
+.board-fit > .board-cell > .board-card {
+  width: min(100cqw, calc(100cqh * 5 / 7));
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 5 / 7;
+}
+
+main:has([data-play-shell]) {
+  height: calc(100dvh - 3.5rem - 1px);
+  min-height: 0;
+  overflow: hidden;
+}
+
+main:has([data-play-shell]) + footer {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .board-grid {
+    gap: 0.625rem;
   }
 }
 

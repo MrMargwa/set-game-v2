@@ -220,6 +220,7 @@ export function LeaderboardPanel({
                 highlightUserId={highlightUserId}
               />
 
+              {entries.length > 3 ? (
               <div className="overflow-x-auto rounded-xl border border-border">
                 <table
                   className="min-w-full text-left text-sm"
@@ -242,7 +243,7 @@ export function LeaderboardPanel({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {entries.map((entry) => {
+                    {entries.slice(3).map((entry) => {
                       const highlighted = Boolean(
                         highlightUserId && entry.userId === highlightUserId,
                       );
@@ -290,6 +291,7 @@ export function LeaderboardPanel({
                   </tbody>
                 </table>
               </div>
+              ) : null}
 
               <p className="text-center text-xs text-muted">
                 Top 25 ·{" "}

@@ -46,7 +46,7 @@ const modes = [
 ];
 
 const highlights = [
-  { label: "Combo-score", detail: "vanaf 100 per SET" },
+  { label: "Classic", detail: "741 per SET" },
   {
     label: "Time Attack",
     detail: TIME_ATTACK_ENABLED ? "60 seconden" : "Binnenkort",
@@ -78,12 +78,15 @@ export default function HomePage() {
                 <span className="block text-foreground/90">SETs pakken.</span>
               </h1>
               <p className="mt-4 max-w-lg text-base leading-relaxed text-muted sm:text-lg">
-                Zoek SETs en bouw combo&apos;s in Classic. Time Attack en online
-                lobby volgen binnenkort.
+                Zoek SETs in Classic, race tegen de klok in Time Attack, of speel
+                samen via de lobby.
               </p>
               <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <Link href="/play?mode=classic" className={`${btnPrimaryPill} w-full sm:w-auto`}>
                   Nu spelen
+                </Link>
+                <Link href="/rules" className={`${btnSecondaryPill} w-full sm:w-auto`}>
+                  Spelregels
                 </Link>
                 <Link href="/leaderboards" className={`${btnSecondaryPill} w-full sm:w-auto`}>
                   Leaderboard

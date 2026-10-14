@@ -21,9 +21,11 @@ export type SetClearingState = {
   stage: SetClearingStage;
 };
 
-function streakBeforeAction(state: GameState): number {
-  return state.modeId === "classic" ? state.currentStreak : 0;
-}
+export type RunLogEntry = {
+  id: number;
+  points: number;
+  streakAfter: number;
+};
 
 export type BoardGameMessage =
   | { type: "success"; text: string }
@@ -47,6 +49,7 @@ export function useBoardGame(modeId: GameModeId, initialSeed?: string) {
   const pendingBoardRef = useRef<CardId[]>([]);
   const boardAnimatingRef = useRef(false);
   const submittingRef = useRef(false);
+  const runLogIdRef = useRef(0);
 
   const [state, setState] = useState<GameState>(() =>
     startGame(modeId, initialSeed ?? `${modeId}-opening-table`),
@@ -61,8 +64,9 @@ export function useBoardGame(modeId: GameModeId, initialSeed?: string) {
   const [streak, setStreak] = useState(0);
   const [elapsedMs, setElapsedMs] = useState(0);
   const [saveNotice, setSaveNotice] = useState<string | null>(null);
+  const [runLog, setRunLog] = useState<RunLogEntry[]>([]);
   const [hintedCardIds, setHintedCardIds] = useState<CardId[]>([]);
-  const [roundStarted, setRoundStarted] = useState(modeId !== "classic");
+  const [roundStarted, setRoundStarted] = useState(false);
 
   const modeMeta = useMemo(
     () => listGameModes().find((m) => m.id === modeId),
@@ -136,7 +140,7 @@ export function useBoardGame(modeId: GameModeId, initialSeed?: string) {
   );
 
   const applyEvents = useCallback(
-    (events: GameEvent[], mode: GameModeId, streakBefore: number) => {
+    (events: GameEvent[], mode: GameModeId) => {
     for (const event of events) {
       if (event.type === "SET_INVALID") {
         setHintedCardIds([]);
@@ -157,9 +161,7 @@ export function useBoardGame(modeId: GameModeId, initialSeed?: string) {
           text:
             mode === "time_attack"
               ? "Geen geldige SET. 3 seconden eraf."
-              : streakBefore > 0
-                ? "Geen geldige SET. Combo terug naar 0."
-                : "Geen geldige SET.",
+              : "Geen geldige SET.",
         });
       }
       if (event.type === "SET_FOUND") {
@@ -171,23 +173,31 @@ export function useBoardGame(modeId: GameModeId, initialSeed?: string) {
         if (mode !== "classic") {
           setStreak((current) => current + 1);
         }
-        const streakLabel =
-          mode === "classic" && event.streakAfter > 1
-            ? ` (streak ${event.streakAfter})`
-            : "";
         setMessage({
           type: "success",
           text:
             mode === "classic"
-              ? `SET gevonden! +${event.pointsEarned}${streakLabel}`
+              ? `SET gevonden! +${event.pointsEarned}`
               : "SET gevonden! +1 punt",
         });
+        if (mode === "classic") {
+          runLogIdRef.current += 1;
+          const entry: RunLogEntry = {
+            id: runLogIdRef.current,
+            points: event.pointsEarned,
+            streakAfter: event.streakAfter,
+          };
+          setRunLog((current) => [entry, ...current].slice(0, 8));
+        }
       }
       if (event.type === "SET_REVEALED") {
         scheduleHintClear([...event.cardIds]);
         setMessage({
           type: "success",
-          text: "Deze drie kaarten vormen een SET.",
+          text:
+            event.pointsSpent > 0
+              ? `Hint. −${event.pointsSpent} punten.`
+              : "Een SET is gemarkeerd.",
         });
       }
       if (event.type === "GAME_ENDED") {
@@ -254,7 +264,11 @@ export function useBoardGame(modeId: GameModeId, initialSeed?: string) {
   }, [roundStarted, state.modeId, state.status]);
 
   useEffect(() => {
-    if (state.modeId !== "time_attack" || state.status !== "playing") {
+    if (
+      !roundStarted ||
+      state.modeId !== "time_attack" ||
+      state.status !== "playing"
+    ) {
       return;
     }
 
@@ -270,7 +284,7 @@ export function useBoardGame(modeId: GameModeId, initialSeed?: string) {
           return prev;
         }
         if (result.events.length > 0) {
-          applyEvents(result.events, prev.modeId, streakBeforeAction(prev));
+          applyEvents(result.events, prev.modeId);
         }
         finalizeAction(prev, result.state, result.events);
         return result.state;
@@ -278,7 +292,7 @@ export function useBoardGame(modeId: GameModeId, initialSeed?: string) {
     }, 250);
 
     return () => clearInterval(interval);
-  }, [applyEvents, finalizeAction, state.modeId, state.status]);
+  }, [applyEvents, finalizeAction, roundStarted, state.modeId, state.status]);
 
   useEffect(() => {
     if (state.status !== "ended" || !state.endReason) {
@@ -317,7 +331,7 @@ export function useBoardGame(modeId: GameModeId, initialSeed?: string) {
           }
           return prev;
         }
-        applyEvents(result.events, prev.modeId, streakBeforeAction(prev));
+        applyEvents(result.events, prev.modeId);
         finalizeAction(prev, result.state, result.events);
         return result.state;
       });
@@ -337,7 +351,7 @@ export function useBoardGame(modeId: GameModeId, initialSeed?: string) {
       if (
         boardAnimatingRef.current ||
         state.status !== "playing" ||
-        (modeId === "classic" && !roundStarted)
+        !roundStarted
       ) {
         return;
       }
@@ -362,14 +376,22 @@ export function useBoardGame(modeId: GameModeId, initialSeed?: string) {
         return next;
       });
     },
-    [modeId, roundStarted, state.status, submitTriple],
+    [roundStarted, state.status, submitTriple],
   );
 
   const beginRound = useCallback(() => {
-    startedAtRef.current = new Date().toISOString();
-    startedAtMsRef.current = Date.now();
+    const now = Date.now();
+    startedAtRef.current = new Date(now).toISOString();
+    startedAtMsRef.current = now;
     setElapsedMs(0);
+    setClockMs(now);
     setRoundStarted(true);
+    setState((prev) => {
+      if (prev.modeId !== "time_attack" || prev.status !== "playing") {
+        return prev;
+      }
+      return { ...prev, endsAtMs: now + prev.config.durationMs };
+    });
   }, []);
 
   const quitGame = useCallback(() => {
@@ -398,9 +420,14 @@ export function useBoardGame(modeId: GameModeId, initialSeed?: string) {
         }
         return prev;
       }
-      applyEvents(result.events, prev.modeId, streakBeforeAction(prev));
+      applyEvents(result.events, prev.modeId);
       finalizeAction(prev, result.state, result.events);
-      setMessage({ type: "success", text: "Drie extra kaarten gedeeld." });
+      const spent = result.events.find((event) => event.type === "CARDS_DEALT");
+      const cost = spent?.type === "CARDS_DEALT" ? (spent.pointsSpent ?? 0) : 0;
+      setMessage({
+        type: "success",
+        text: cost > 0 ? `Drie extra kaarten. −${cost} punten.` : "Drie extra kaarten gedeeld.",
+      });
       return result.state;
     });
   }, [applyEvents, finalizeAction]);
@@ -424,8 +451,9 @@ export function useBoardGame(modeId: GameModeId, initialSeed?: string) {
     setFeedback(null);
     setStreak(0);
     setElapsedMs(0);
-    setRoundStarted(modeId !== "classic");
+    setRoundStarted(false);
     setHintedCardIds([]);
+    setRunLog([]);
     setSaveNotice(null);
     setClockMs(Date.now());
   }, [clearClearingTimeouts, modeId]);
@@ -453,5 +481,6 @@ export function useBoardGame(modeId: GameModeId, initialSeed?: string) {
     hintedCardIds,
     roundStarted,
     saveNotice,
+    runLog,
   };
 }

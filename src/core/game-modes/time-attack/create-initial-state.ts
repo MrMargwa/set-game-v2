@@ -1,4 +1,4 @@
-import { createInitialClassicState } from "../../game-engine";
+import { CLASSIC_MAX_DEAL_EXTRA_USES, createInitialClassicState } from "../../game-engine";
 import {
   DEFAULT_TIME_ATTACK_CONFIG,
   type TimeAttackGameConfig,
@@ -17,9 +17,11 @@ export function createInitialTimeAttackState(
     pointsPerSet: config.pointsPerSet,
     basePoints: config.pointsPerSet,
     comboScoring: false,
-    maxDealExtraUses: null,
-    dealExtraRequiresNoSet: true,
-    maxHintUses: 0,
+    maxDealExtraUses: CLASSIC_MAX_DEAL_EXTRA_USES,
+    dealExtraRequiresNoSet: false,
+    maxHintUses: null,
+    hintCost: 0,
+    dealExtraCost: 0,
   });
 
   return {
@@ -34,5 +36,6 @@ export function createInitialTimeAttackState(
     validSetsFound: classic.validSetsFound,
     rngSeed: classic.rngSeed,
     endsAtMs: nowMs + config.durationMs,
+    dealExtraUses: 0,
   };
 }

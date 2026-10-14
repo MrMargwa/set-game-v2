@@ -6,6 +6,7 @@ export type DomainErrorCode =
   | "CANNOT_DEAL_EXTRA"
   | "CANNOT_REVEAL_SET"
   | "NO_SET_ON_BOARD"
+  | "INSUFFICIENT_SCORE"
   | "DUPLICATE_CARD";
 
 export type DomainError = {

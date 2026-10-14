@@ -1,16 +1,17 @@
 import { parseGameModeId, type GameModeId } from "@/core/game-modes";
 
 /** Zet op `true` zodra Time Attack klaar is voor spelers. */
-export const TIME_ATTACK_ENABLED = false;
+export const TIME_ATTACK_ENABLED = true;
 
 /** Zet op `true` zodra online lobby / multiplayer klaar is. */
-export const MULTIPLAYER_LOBBY_ENABLED = false;
+export const MULTIPLAYER_LOBBY_ENABLED = true;
 
 export const COMING_SOON_BADGE = "Binnenkort";
 
 export function isGameModePlayable(modeId: GameModeId): boolean {
   if (modeId === "classic") return true;
   if (modeId === "time_attack") return TIME_ATTACK_ENABLED;
+  if (modeId === "multiplayer") return MULTIPLAYER_LOBBY_ENABLED;
   return false;
 }
 
@@ -31,12 +32,10 @@ export const COMING_SOON_COPY: Record<
 > = {
   time_attack: {
     title: "Time Attack",
-    lead:
-      "60 seconden, druk op het bord en strafseconden bij een foute SET. We bouwen deze modus nog af — Classic kun je nu al spelen.",
+    lead: "60 seconden, druk op het bord en strafseconden bij een foute SET. We bouwen deze modus nog af — Classic kun je nu al spelen.",
   },
   multiplayer: {
     title: "Online lobby",
-    lead:
-      "Speel realtime met vrienden via invitecode. Multiplayer komt in een volgende update; tot die tijd focussen we op een sterke solo-ervaring.",
+    lead: "Speel realtime met vrienden via invitecode. Multiplayer komt in een volgende update; tot die tijd focussen we op een sterke solo-ervaring.",
   },
 };

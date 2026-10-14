@@ -104,7 +104,7 @@ function submitSet(
       state: {
         ...state,
         moves,
-        currentStreak: 0,
+        currentStreak: state.config.comboScoring ? 0 : state.currentStreak,
         invalidSubmits: state.invalidSubmits + 1,
       },
       events,
@@ -128,7 +128,7 @@ function submitSet(
     });
   }
 
-  const streakAfter = state.currentStreak + 1;
+  const streakAfter = state.config.comboScoring ? state.currentStreak + 1 : 0;
   const awarded = pointsForValidSet(state.config, streakAfter);
   events.push({
     type: "SET_FOUND",
@@ -147,8 +147,10 @@ function submitSet(
     score: state.score + awarded.points,
     moves,
     validSetsFound,
-    currentStreak: streakAfter,
-    maxStreak: Math.max(state.maxStreak, streakAfter),
+    currentStreak: state.config.comboScoring ? streakAfter : 0,
+    maxStreak: state.config.comboScoring
+      ? Math.max(state.maxStreak, streakAfter)
+      : state.maxStreak,
   };
 
   return withEndEvaluation(interim, events);
@@ -193,12 +195,18 @@ function dealExtra(state: ClassicGameState): ApplyResult {
     };
   }
 
+  const payment = payCost(state, state.config.dealExtraCost);
+  if (!payment.ok) {
+    return payment;
+  }
+
   const drawn = drawCards(state.deck, state.config.dealExtraSize);
   const events: GameEvent[] = [
     {
       type: "CARDS_DEALT",
       cardIds: drawn.drawn,
       reason: "extra",
+      pointsSpent: state.config.dealExtraCost,
     },
   ];
 
@@ -206,6 +214,7 @@ function dealExtra(state: ClassicGameState): ApplyResult {
     ...state,
     deck: drawn.deck,
     board: [...state.board, ...drawn.drawn],
+    score: payment.score,
     dealExtraUses: state.dealExtraUses + 1,
   };
 
@@ -244,11 +253,26 @@ function revealSet(state: ClassicGameState): ApplyResult {
     };
   }
 
+  const payment = payCost(state, state.config.hintCost);
+  if (!payment.ok) {
+    return payment;
+  }
+
   return {
     ok: true,
-    state: { ...state, hintUses: state.hintUses + 1 },
-    events: [{ type: "SET_REVEALED", cardIds: revealed }],
+    state: { ...state, hintUses: state.hintUses + 1, score: payment.score },
+    events: [{ type: "SET_REVEALED", cardIds: revealed, pointsSpent: state.config.hintCost }],
   };
+}
+
+function payCost(
+  state: ClassicGameState,
+  cost: number,
+): { ok: true; score: number } | { ok: false; error: ReturnType<typeof domainError> } {
+  if (cost <= 0) {
+    return { ok: true, score: state.score };
+  }
+  return { ok: true, score: state.score - cost };
 }
 
 export function applyAction(

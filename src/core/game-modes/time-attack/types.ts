@@ -33,4 +33,5 @@ export type TimeAttackGameState = {
   rngSeed: string;
   /** Wall-clock ms when the round ends (engine source of truth). */
   endsAtMs: number;
+  dealExtraUses: number;
 };

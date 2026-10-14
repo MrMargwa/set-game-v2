@@ -17,6 +17,7 @@ import {
 export function LobbyHub() {
   const router = useRouter();
   const [inviteCode, setInviteCode] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -51,7 +52,7 @@ export function LobbyHub() {
       const res = await fetch("/api/lobbies/join", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ inviteCode }),
+        body: JSON.stringify({ inviteCode, password: password || undefined }),
       });
       const data = (await res.json()) as {
         lobby?: { id: string };
@@ -142,6 +143,17 @@ export function LobbyHub() {
               <span className="mt-1 block text-xs font-normal text-muted">
                 4 tot 8 tekens, hoofdletters.
               </span>
+            </label>
+            <label className="text-sm font-medium text-foreground">
+              Wachtwoord
+              <input
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                className={inputField}
+                autoComplete="off"
+                placeholder="Alleen als de host er een instelde"
+              />
             </label>
             <button
               type="submit"

@@ -99,6 +99,7 @@ docker compose down -v
 | Time Attack | `/play?mode=time_attack` |
 | Lobby (login) | `/lobby` |
 | Dashboard | `/dashboard` |
+| Spelregels | `/rules` |
 | Leaderboard | `/leaderboards` |
 | Login / register | `/login`, `/register` |
 | Health API | `/api/health` |

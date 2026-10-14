@@ -66,7 +66,7 @@ export function SetCard({
       onClick={onSelect}
       aria-pressed={selected}
       aria-label={`${cardAccessibleName(card)}${hinted ? ", hint" : ""}`}
-      className={`animate-card-enter relative flex aspect-[5/7] w-full min-w-0 touch-manipulation flex-col rounded-xl border-2 bg-card-face p-1.5 shadow-[var(--shadow-card)] transition-[transform,box-shadow,border-color,background-color,opacity] duration-[var(--motion-normal)] ease-out hover:-translate-y-1 hover:shadow-[var(--shadow-card-hover)] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:p-2 ${
+      className={`board-card animate-card-enter relative flex aspect-[5/7] w-full min-w-0 touch-manipulation flex-col rounded-lg border-2 bg-card-face p-1.5 shadow-[var(--shadow-card)] transition-[transform,box-shadow,border-color,background-color,opacity] duration-[var(--motion-normal)] ease-out hover:-translate-y-0.5 hover:shadow-[var(--shadow-card-hover)] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:rounded-xl sm:p-2 ${
         selected && !celebrateSuccess && !exiting
           ? "border-ring bg-accent-muted/20 ring-2 ring-ring/40"
           : "border-border"

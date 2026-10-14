@@ -18,3 +18,12 @@ export type LeaderboardResult = {
   scope: LeaderboardScope;
   entries: LeaderboardEntry[];
 };
+
+export type FastestClearEntry = {
+  rank: number;
+  userId: UserId;
+  username: string;
+  finalScore: number;
+  validSetsFound: number;
+  durationMs: number;
+};

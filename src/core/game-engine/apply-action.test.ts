@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { findSets } from "../set-rules";
 import { buildBoardWithoutSets } from "../set-rules/test-helpers";
 import { applyAction } from "./apply-action";
-import { CLASSIC_MAX_HINT_USES } from "./types";
+import { CLASSIC_DEAL_EXTRA_COST, CLASSIC_HINT_COST, CLASSIC_POINTS_PER_SET } from "./types";
 import { createInitialClassicState } from "./create-initial-state";
 import { evaluateGameEnd } from "./evaluate-game-end";
 
@@ -28,6 +28,8 @@ describe("applyAction — acceptance criteria", () => {
 
   it("AC-SET-01: valid SET increases score and replaces cards", () => {
     const state = createInitialClassicState("ac-set-01");
+    expect(state.board).toHaveLength(12);
+    expect(state.deck.drawPile).toHaveLength(69);
     const sets = findSets(state.board, state.catalog);
     expect(sets.length).toBeGreaterThan(0);
 
@@ -39,9 +41,7 @@ describe("applyAction — acceptance criteria", () => {
 
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.state.score).toBe(1224);
-    expect(result.state.currentStreak).toBe(1);
-    expect(result.state.maxStreak).toBe(1);
+    expect(result.state.score).toBe(CLASSIC_POINTS_PER_SET);
     expect(result.state.validSetsFound).toBe(1);
     for (const id of sets[0]!) {
       expect(result.state.board).not.toContain(id);
@@ -49,39 +49,54 @@ describe("applyAction — acceptance criteria", () => {
     }
   });
 
-  it("AC-SET-04: deal extra adds three cards without score", () => {
-    const state = stateWithoutSet();
+  it("AC-SET-04: deal extra adds three cards and charges the cost", () => {
+    const state = { ...stateWithoutSet(), score: CLASSIC_POINTS_PER_SET };
     expect(findSets(state.board, state.catalog)).toEqual([]);
     expect(state.deck.drawPile.length).toBeGreaterThanOrEqual(3);
 
-    const scoreBefore = state.score;
     const sizeBefore = state.board.length;
     const result = applyAction(state, { type: "DEAL_EXTRA" });
 
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.state.score).toBe(scoreBefore);
+    expect(result.state.score).toBe(CLASSIC_POINTS_PER_SET - CLASSIC_DEAL_EXTRA_COST);
     expect(result.state.board.length).toBe(sizeBefore + 3);
   });
 
-  it("reveals one SET without changing the score, up to the hint limit", () => {
-    const state = createInitialClassicState("hint-limit");
-    const first = applyAction(state, { type: "REVEAL_SET" });
-    expect(first.ok).toBe(true);
-    if (!first.ok) return;
-    expect(first.state.score).toBe(0);
-    expect(first.state.hintUses).toBe(1);
-    expect(first.events[0]?.type).toBe("SET_REVEALED");
+  it("charges points for a hint and less for extra cards", () => {
+    const funded = { ...createInitialClassicState("costs"), score: CLASSIC_POINTS_PER_SET };
+    const hint = applyAction(funded, { type: "REVEAL_SET" });
+    expect(hint.ok).toBe(true);
+    if (!hint.ok) return;
+    expect(hint.state.score).toBe(CLASSIC_POINTS_PER_SET - CLASSIC_HINT_COST);
 
-    let current = first.state;
-    for (let i = 1; i < CLASSIC_MAX_HINT_USES; i += 1) {
-      const next = applyAction(current, { type: "REVEAL_SET" });
-      expect(next.ok).toBe(true);
-      if (!next.ok) return;
-      current = next.state;
+    const dealt = applyAction(hint.state, { type: "DEAL_EXTRA" });
+    expect(dealt.ok).toBe(true);
+    if (!dealt.ok) return;
+    expect(dealt.state.score).toBe(
+      CLASSIC_POINTS_PER_SET - CLASSIC_HINT_COST - CLASSIC_DEAL_EXTRA_COST,
+    );
+
+    const broke = applyAction(
+      { ...createInitialClassicState("broke"), score: 10 },
+      { type: "REVEAL_SET" },
+    );
+    expect(broke.ok).toBe(true);
+    if (!broke.ok) return;
+    expect(broke.state.score).toBe(10 - CLASSIC_HINT_COST);
+  });
+
+  it("deals extra at most five times and lets the score go negative", () => {
+    let state = { ...createInitialClassicState("extra-cap"), score: 0 };
+    for (let i = 0; i < 5; i += 1) {
+      const result = applyAction(state, { type: "DEAL_EXTRA" });
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      state = result.state;
     }
-
-    const blocked = applyAction(current, { type: "REVEAL_SET" });
+    expect(state.dealExtraUses).toBe(5);
+    expect(state.score).toBe(-CLASSIC_DEAL_EXTRA_COST * 5);
+    const blocked = applyAction(state, { type: "DEAL_EXTRA" });
     expect(blocked.ok).toBe(false);
   });
 

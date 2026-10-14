@@ -1,19 +1,18 @@
-# Spelregels — Classic
+# Spelregels
 
-Korte referentie. Time Attack en multiplayer gebruiken deze combo-score **niet** (daar blijft +1 per SET).
+## Classic
 
-## Bord
+- Deck is **81** kaarten: **12** open, **69** in de stapel.
+- Elke geldige SET levert **741** punten (`CLASSIC_POINTS_PER_SET`).
+- De klok loopt pas nadat je op **Start** drukt. De tijd verandert de score niet.
+- **Stoppen** eindigt de ronde en slaat de score op als je ingelogd bent.
+- Een hint (**SET tonen**) kost **250** punten (`CLASSIC_HINT_COST`).
+- **+3 kaarten** kost **125** punten (`CLASSIC_DEAL_EXTRA_COST`), ook als er nog een SET op het bord ligt. Maximaal **5** keer per ronde.
+- Beide knoppen werken meteen. De score mag onder 0.
 
-- Deck blijft **81** kaarten.
-- Startbord is **18 kaarten**: drie rijen van zes.
-- Doel: het deck leegspelen. De klok loopt pas nadat je op **Start** drukt.
-- **Stoppen** eindigt de ronde (`player_quit`) en slaat de score op als je ingelogd bent.
+## Multiplayer
 
-## Score
-
-Elke geldige SET levert een vast, ongelijk bedrag op. Hoe langer de streak, hoe hoger dat bedrag. Geen ronde ×1000-stappen.
-
-Een streak is het aantal geldige SETs **achter elkaar**. Een foute SET zet de streak terug naar 0. **+3 kaarten** breekt de streak niet.
+Streaks horen bij multiplayer. Een streak is het aantal geldige SETs **achter elkaar** van dezelfde speler. Een foute SET zet alleen die streak terug naar 0.
 
 | Streak na deze SET | Punten deze SET |
 |--------------------|-----------------|
@@ -24,19 +23,8 @@ Een streak is het aantal geldige SETs **achter elkaar**. Een foute SET zet de st
 | 5 | 9512 |
 | 6+ | 13789 |
 
-Voorbeeld: twee goede SETs achter elkaar = 1224 + 2356 = **3580**. Daarna een fout, en de volgende SET is weer 1224.
-
-Tabel in code: `CLASSIC_COMBO_POINTS` in `src/core/scoring/classic-scoring.ts`.
-
-## +3 kaarten
-
-- **Vind een SET:** wijst één geldige SET aan, zonder punten. Maximaal **5 keer per ronde** (`CLASSIC_MAX_HINT_USES`).
-- **+3 kaarten:** maximaal **5 keer per ronde**.
-- Werkt ook als er nog een SET op het bord ligt.
-- Werkt niet meer als het deck minder dan 3 kaarten heeft, of als de 5 op zijn.
-
-Constante: `CLASSIC_MAX_DEAL_EXTRA_USES` in `src/core/game-engine/types.ts`.
+Tabel: `CLASSIC_COMBO_POINTS` in `src/core/scoring/classic-scoring.ts`.
 
 ## Leaderboard
 
-Opgeslagen veld is de **eindscore** (inclusief als je stopt). Tijd en hoogste streak zie je op het eindscherm; die staan niet als aparte kolommen op het leaderboard.
+Per spelmodus. De top 3 staat op het podium. Daaronder volgen de rangen 4 tot en met 25.

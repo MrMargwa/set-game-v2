@@ -12,4 +12,8 @@ export type {
   GameStatus,
   LegalHints,
 } from "./types";
-export { DEFAULT_CLASSIC_CONFIG } from "./types";
+export {
+  CLASSIC_MAX_DEAL_EXTRA_USES,
+  CLASSIC_POINTS_PER_SET,
+  DEFAULT_CLASSIC_CONFIG,
+} from "./types";

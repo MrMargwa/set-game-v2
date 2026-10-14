@@ -30,6 +30,15 @@ export const pillActive =
 export const pillInactive =
   `inline-flex min-h-11 touch-manipulation items-center justify-center whitespace-nowrap rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-surface-elevated ${focusRing}`;
 
+export const modeTabActive =
+  `inline-flex min-h-10 flex-1 touch-manipulation items-center justify-center rounded-lg bg-accent px-3 text-sm font-semibold text-accent-foreground shadow-[var(--shadow-card)] ${focusRing}`;
+
+export const modeTabInactive =
+  `inline-flex min-h-10 flex-1 touch-manipulation items-center justify-center rounded-lg border border-border bg-surface px-3 text-sm font-medium text-foreground transition-colors hover:bg-surface-elevated ${focusRing}`;
+
+export const modeTabDisabled =
+  `inline-flex min-h-10 flex-1 cursor-not-allowed items-center justify-center gap-1 rounded-lg border border-border bg-surface-elevated/80 px-2 text-sm font-medium text-muted opacity-90`;
+
 export const panel =
   "rounded-xl border border-border bg-surface shadow-[var(--shadow-card)]";
 

@@ -9,7 +9,7 @@ import type { GameModeDefinition } from "../types";
 export const classicMode: GameModeDefinition<ClassicGameState> = {
   id: "classic",
   displayName: "Classic",
-  description: "Leeg het deck. Een reeks geldige SETs levert meer punten op.",
+  description: "Vind SETs. Het deck telt 69 kaarten. Hints en extra kaarten kosten punten.",
   createInitialState: (seed) => createInitialClassicState(seed),
   applyAction: (state, action) => applyAction(state, action),
   getLegalHints: (state) => getLegalHints(state),

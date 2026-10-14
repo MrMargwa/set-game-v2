@@ -85,18 +85,18 @@ export function HomeHeroShowcase() {
           </div>
           <div className="rounded-lg border border-competition/30 bg-competition/10 px-2 py-2">
             <p className="text-[0.65rem] font-medium uppercase tracking-[0.12em] text-muted">
-              Streak
+              Tijd
             </p>
             <p className="mt-0.5 font-mono text-lg font-semibold tabular-nums text-competition">
-              3×
+              2:14
             </p>
           </div>
           <div className="rounded-lg border border-border bg-surface-elevated px-2 py-2">
             <p className="text-[0.65rem] font-medium uppercase tracking-[0.12em] text-muted">
-              Combo
+              Deck
             </p>
             <p className="mt-0.5 font-mono text-lg font-semibold tabular-nums">
-              ×1.5
+              69
             </p>
           </div>
         </div>

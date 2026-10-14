@@ -1,7 +1,7 @@
 import type { RowDataPacket } from "mysql2";
 import type { GameModeId } from "@/core/game-modes";
 import { getPool } from "@/infrastructure/database/client";
-import type { LeaderboardEntry, LeaderboardScope } from "../domain/types";
+import type { FastestClearEntry, LeaderboardEntry, LeaderboardScope } from "../domain/types";
 
 type LeaderboardRow = RowDataPacket & {
   user_id: string;
@@ -73,6 +73,62 @@ export class LeaderboardRepository {
       validSetsFound: row.valid_sets_found,
       moves: row.moves,
       endedAt: new Date(row.ended_at),
+    }));
+  }
+
+  async listFastestDeckClears(
+    modeId: GameModeId,
+    limit: number,
+  ): Promise<FastestClearEntry[]> {
+    const pool = getPool();
+    if (!pool) {
+      throw new Error("Database not available");
+    }
+
+    const cappedLimit = Math.min(Math.max(limit, 1), 25);
+
+    const [rows] = await pool.execute<
+      (RowDataPacket & {
+        user_id: string;
+        username: string;
+        final_score: number;
+        valid_sets_found: number;
+        duration_us: number;
+      })[]
+    >(
+      `WITH ranked AS (
+         SELECT
+           gs.user_id,
+           u.username,
+           gs.final_score,
+           gs.valid_sets_found,
+           TIMESTAMPDIFF(MICROSECOND, gs.started_at, gs.ended_at) AS duration_us,
+           ROW_NUMBER() OVER (
+             PARTITION BY gs.user_id
+             ORDER BY TIMESTAMPDIFF(MICROSECOND, gs.started_at, gs.ended_at) ASC
+           ) AS rn
+         FROM game_sessions gs
+         INNER JOIN users u ON u.id = gs.user_id
+         WHERE gs.mode_id = ?
+           AND gs.end_reason = 'deck_empty'
+           AND gs.user_id IS NOT NULL
+           AND gs.ended_at IS NOT NULL
+       )
+       SELECT user_id, username, final_score, valid_sets_found, duration_us
+       FROM ranked
+       WHERE rn = 1
+       ORDER BY duration_us ASC
+       LIMIT ?`,
+      [modeId, cappedLimit],
+    );
+
+    return rows.map((row, index) => ({
+      rank: index + 1,
+      userId: row.user_id,
+      username: row.username,
+      finalScore: row.final_score,
+      validSetsFound: row.valid_sets_found,
+      durationMs: Math.round(Number(row.duration_us) / 1000),
     }));
   }
 }

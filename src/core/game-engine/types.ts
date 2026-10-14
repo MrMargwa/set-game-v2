@@ -7,41 +7,51 @@ export type EndReason =
   | "deck_empty"
   | "no_set_remaining"
   | "player_quit"
-  | "time_up";
+  | "time_up"
+  | "target_reached";
 
-/** Hoe vaak Classic per ronde +3 kaarten mag trekken. */
+/** Punten voor een geldige SET in Classic. */
+export const CLASSIC_POINTS_PER_SET = 741;
+
+/** Punten die een hint kost. Hoger dan extra kaarten. */
+export const CLASSIC_HINT_COST = 250;
+
+/** Punten die +3 kaarten kost. */
+export const CLASSIC_DEAL_EXTRA_COST = 125;
+
+/** Hoe vaak solo +3 kaarten mag in één ronde. */
 export const CLASSIC_MAX_DEAL_EXTRA_USES = 5;
-
-/** Hoe vaak Classic per ronde een SET mag laten aanwijzen. */
-export const CLASSIC_MAX_HINT_USES = 5;
 
 export type ClassicGameConfig = {
   modeId: "classic";
   initialBoardSize: number;
-  dealExtraSize: 3;
-  /** Flat points when combo scoring is off (Time Attack / multiplayer). */
+  dealExtraSize: number;
+  /** Flat points when combo scoring is off. */
   pointsPerSet: number;
-  /** Base points before the streak multiplier (Classic). */
+  /** Base points before the streak multiplier (multiplayer). */
   basePoints: number;
   comboScoring: boolean;
-  /** `null` = onbeperkt (Time Attack / multiplayer). */
+  /** `null` = onbeperkt. */
   maxDealExtraUses: number | null;
-  /** Classic mag +3 ook gebruiken als er nog een SET op het bord ligt. */
   dealExtraRequiresNoSet: boolean;
   /** `0` = uit. `null` = onbeperkt. */
   maxHintUses: number | null;
+  hintCost: number;
+  dealExtraCost: number;
 };
 
 export const DEFAULT_CLASSIC_CONFIG: ClassicGameConfig = {
   modeId: "classic",
-  initialBoardSize: 18,
+  initialBoardSize: 12,
   dealExtraSize: 3,
-  pointsPerSet: 1,
+  pointsPerSet: CLASSIC_POINTS_PER_SET,
   basePoints: 1000,
-  comboScoring: true,
+  comboScoring: false,
   maxDealExtraUses: CLASSIC_MAX_DEAL_EXTRA_USES,
   dealExtraRequiresNoSet: false,
-  maxHintUses: CLASSIC_MAX_HINT_USES,
+  maxHintUses: null,
+  hintCost: CLASSIC_HINT_COST,
+  dealExtraCost: CLASSIC_DEAL_EXTRA_COST,
 };
 
 export type ClassicGameState = {
@@ -80,8 +90,13 @@ export type GameEvent =
       multiplier: number;
     }
   | { type: "SET_INVALID"; cardIds: CardTriple }
-  | { type: "CARDS_DEALT"; cardIds: CardId[]; reason: "replace" | "extra" }
-  | { type: "SET_REVEALED"; cardIds: CardTriple }
+  | {
+      type: "CARDS_DEALT";
+      cardIds: CardId[];
+      reason: "replace" | "extra";
+      pointsSpent?: number;
+    }
+  | { type: "SET_REVEALED"; cardIds: CardTriple; pointsSpent: number }
   | { type: "GAME_ENDED"; reason: EndReason };
 
 export type ApplyResult<S = ClassicGameState> =

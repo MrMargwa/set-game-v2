@@ -6,6 +6,34 @@ export type MultiplayerPlayer = {
   username: string;
   score: number;
   validSetsFound: number;
+  currentStreak: number;
+  maxStreak: number;
+};
+
+export type MultiplayerRules = {
+  mode: "classic" | "time_attack";
+  scoring: "streak" | "flat";
+  timeLimitSeconds: number | null;
+  targetSets: number | null;
+  allowDealExtra: boolean;
+  dealExtraSize: number;
+  deckSize: number;
+  boardColumns: number;
+  initialBoardSize: number;
+  startedAt: string;
+};
+
+export const DEFAULT_MULTIPLAYER_RULES: MultiplayerRules = {
+  mode: "classic",
+  scoring: "streak",
+  timeLimitSeconds: null,
+  targetSets: null,
+  allowDealExtra: true,
+  dealExtraSize: 3,
+  deckSize: 81,
+  boardColumns: 5,
+  initialBoardSize: 12,
+  startedAt: "",
 };
 
 export type MultiplayerClassicSnapshot = {
@@ -18,6 +46,7 @@ export type MultiplayerClassicSnapshot = {
   moves: number;
   players: MultiplayerPlayer[];
   lastSetByUserId?: UserId;
+  rules: MultiplayerRules;
 };
 
 export type MultiplayerGameRecord = {
